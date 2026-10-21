@@ -133,16 +133,18 @@ footer.disc { grid-column: 1 / -1; font-size: 12px; color: var(--muted); border-
   </header>
 
   <nav class="index" aria-label="Calculators">
-    <div class="grp"><span class="grp-h">Pretreatment</span>
-      <a href="#hardness">Hardness &amp; TDS</a>
-      <a href="#softener">Softener run length</a>
-      <a href="#ro">RO performance</a>
-      <a href="#feed">Chemical feed rate</a>
+    <div class="grp"><span class="grp-h">Softener</span>
+      <a href="#hardness">Hardness units</a>
+      <a href="#softener">Softener</a>
+    </div>
+    <div class="grp"><span class="grp-h">Dealkalizer</span>
+      <a href="#dealk">Dealkalizer</a>
     </div>
     <div class="grp"><span class="grp-h">Boiler</span>
       <a href="#cycles">Cycles &amp; blowdown</a>
       <a href="#limits">Max cycles (ASME)</a>
       <a href="#scavenger">Sulfite feed</a>
+      <a href="#feed">Chemical feed rate</a>
       <a href="#savings">Blowdown savings</a>
     </div>
     <div class="grp"><span class="grp-h">Reference</span>
@@ -153,7 +155,7 @@ footer.disc { grid-column: 1 / -1; font-size: 12px; color: var(--muted); border-
   <main>
     <!-- ============ HARDNESS ============ -->
     <section class="calc" id="hardness">
-      <h2>Hardness &amp; TDS</h2>
+      <h2>Hardness units</h2>
       <p class="lede">Convert a test kit or lab result between the units customers and lab reports use.</p>
 
       <div class="panel">
@@ -180,21 +182,14 @@ footer.disc { grid-column: 1 / -1; font-size: 12px; color: var(--muted); border-
         <div class="out" id="h_out2"></div>
       </div>
 
-      <div class="panel">
-        <h3 class="panel-h">Conductivity to TDS</h3>
-        <div class="fields">
-          <div class="f"><label for="h_cond">Conductivity</label><div class="in"><input id="h_cond" type="number" step="any" value="650"><span class="u">µS/cm</span></div></div>
-          <div class="f"><label for="h_fac">TDS factor</label><div class="in"><input id="h_fac" type="number" step="any" value="0.65"></div><small>0.55–0.70 typical; ~0.5 for boiler water</small></div>
-        </div>
-        <div class="out" id="h_out3"></div>
-      </div>
       <p class="basis">1 gpg = <code>17.12 ppm as CaCO₃</code> · 1 meq/L = <code>50.04 ppm as CaCO₃</code> · Ca → CaCO₃ <code>× 2.497</code> · Mg → CaCO₃ <code>× 4.118</code></p>
     </section>
 
     <!-- ============ SOFTENER ============ -->
     <section class="calc" id="softener">
-      <h2>Softener run length</h2>
-      <p class="lede">Gallons between regenerations, salt use, and how often the unit cycles. Capacity is from the salt dose on standard 8% crosslinked cation resin.</p>
+      <h2>Softener</h2>
+      <p class="lede">Gallons between regenerations, salt use, and resin sizing. Capacity is from the salt dose on standard 8% crosslinked cation resin.</p>
+      <h3 class="panel-h" style="margin-bottom:12px">Run length on an existing unit</h3>
       <div class="panel">
         <div class="fields">
           <div class="f"><label for="s_hard">Raw water hardness</label><div class="in"><input id="s_hard" type="number" step="any" value="205"><span class="u">ppm CaCO₃</span></div></div>
@@ -212,25 +207,50 @@ footer.disc { grid-column: 1 / -1; font-size: 12px; color: var(--muted); border-
         </div>
         <div class="out" id="s_out"></div>
       </div>
-      <p class="basis">Gallons per regen = <code>ft³ × capacity × (1 − reserve) ÷ hardness (gpg)</code>. Capacities are typical vendor-curve values; use the resin data sheet for a design.</p>
+
+      <div class="panel">
+        <h3 class="panel-h">Size a new softener</h3>
+        <div class="fields">
+          <div class="f"><label for="z_days">Target time between regens</label><div class="in"><input id="z_days" type="number" step="any" value="3"><span class="u">days</span></div><small>Uses hardness, salt dose, water use and reserve from above</small></div>
+          <div class="f"><label for="z_peak">Peak service flow</label><div class="in"><input id="z_peak" type="number" step="any" value="40"><span class="u">gpm</span></div></div>
+        </div>
+        <div class="out" id="z_out"></div>
+      </div>
+      <p class="basis">Gallons per regen = <code>ft³ × capacity × (1 − reserve) ÷ hardness (gpg)</code> · Resin needed = <code>gal/day × days × gpg ÷ (capacity × (1 − reserve))</code> · Service rate = <code>gpm ÷ ft³</code>, typically 1–5 gpm/ft³ continuous and up to about 8 gpm/ft³ peak. Capacities are typical vendor-curve values; use the resin data sheet for a design.</p>
     </section>
 
-    <!-- ============ RO ============ -->
-    <section class="calc" id="ro">
-      <h2>RO performance</h2>
-      <p class="lede">Recovery, rejection and flux from the flows and conductivities on the RO panel.</p>
+    <!-- ============ DEALKALIZER ============ -->
+    <section class="calc" id="dealk">
+      <h2>Dealkalizer</h2>
+      <p class="lede">Run length and regenerant use for a chloride-cycle (salt-split) dealkalizer, and what removing alkalinity does for boiler cycles and condensate CO₂. Feed it softened water.</p>
       <div class="panel">
+        <h3 class="panel-h">Run length</h3>
         <div class="fields">
-          <div class="f"><label for="ro_qf">Feed flow</label><div class="in"><input id="ro_qf" type="number" step="any" value="100"><span class="u">gpm</span></div></div>
-          <div class="f"><label for="ro_qp">Permeate flow</label><div class="in"><input id="ro_qp" type="number" step="any" value="75"><span class="u">gpm</span></div></div>
-          <div class="f"><label for="ro_cf">Feed conductivity</label><div class="in"><input id="ro_cf" type="number" step="any" value="800"><span class="u">µS/cm</span></div></div>
-          <div class="f"><label for="ro_cp">Permeate conductivity</label><div class="in"><input id="ro_cp" type="number" step="any" value="16"><span class="u">µS/cm</span></div></div>
-          <div class="f"><label for="ro_n">Number of elements</label><div class="in"><input id="ro_n" type="number" step="1" value="24"></div></div>
-          <div class="f"><label for="ro_a">Area per element</label><div class="in"><input id="ro_a" type="number" step="any" value="400"><span class="u">ft²</span></div><small>8″ × 40″: 365–440 ft²</small></div>
+          <div class="f"><label for="d_alk">Inlet M alkalinity</label><div class="in"><input id="d_alk" type="number" step="any" value="180"><span class="u">ppm CaCO₃</span></div></div>
+          <div class="f"><label for="d_so4">Sulfate</label><div class="in"><input id="d_so4" type="number" step="any" value="40"><span class="u">mg/L SO₄</span></div></div>
+          <div class="f"><label for="d_no3">Nitrate</label><div class="in"><input id="d_no3" type="number" step="any" value="5"><span class="u">mg/L NO₃</span></div></div>
+          <div class="f"><label for="d_resin">Resin volume per tank</label><div class="in"><input id="d_resin" type="number" step="any" value="20"><span class="u">ft³</span></div></div>
+          <div class="f wide"><label for="d_regen">Regeneration</label><div class="in"><select id="d_regen">
+            <option value="salt">Salt only, 5 lb/ft³</option>
+            <option value="caustic" selected>Salt 5 lb/ft³ + caustic 0.5 lb/ft³</option>
+          </select></div></div>
+          <div class="f"><label for="d_cap">Resin capacity</label><div class="in"><input id="d_cap" type="number" step="any"><span class="u">gr/ft³</span></div><small>Fills from regeneration; overwrite with vendor data</small></div>
+          <div class="f"><label for="d_leak">Alkalinity leakage</label><div class="in"><input id="d_leak" type="number" step="any"><span class="u">% of inlet</span></div></div>
+          <div class="f"><label for="d_use">Water use</label><div class="in"><input id="d_use" type="number" step="any" value="8000"><span class="u">gal/day</span></div></div>
+          <div class="f"><label for="d_res">Reserve / safety</label><div class="in"><input id="d_res" type="number" step="any" value="10"><span class="u">%</span></div></div>
         </div>
-        <div class="out" id="ro_out"></div>
+        <div class="out" id="d_out"></div>
       </div>
-      <p class="basis">Recovery = <code>Qp ÷ Qf</code> · Concentration factor = <code>1 ÷ (1 − recovery)</code> · Rejection = <code>1 − Cp ÷ Cf</code> · Flux = <code>Qp × 1440 ÷ total area</code>. Typical design flux: well water 14–18 gfd, surface water 10–14 gfd. Use normalized data for trending.</p>
+
+      <div class="panel">
+        <h3 class="panel-h">Effect on the boiler</h3>
+        <div class="fields">
+          <div class="f"><label for="d_cr">Condensate return</label><div class="in"><input id="d_cr" type="number" step="any" value="50"><span class="u">% of feedwater</span></div></div>
+          <div class="f"><label for="d_lim">Boiler alkalinity limit</label><div class="in"><input id="d_lim" type="number" step="any" value="700"><span class="u">ppm CaCO₃</span></div><small>See Max cycles (ASME)</small></div>
+        </div>
+        <div class="out" id="d_out2"></div>
+      </div>
+      <p class="basis">The resin exchanges sulfate, nitrate and bicarbonate for chloride, so all three load it. Load (gpg) = <code>(M alk + SO₄ × 1.042 + NO₃ × 0.807) ÷ 17.12</code>. Chloride added = anions removed <code>× 0.709</code> as Cl. CO₂ in steam ≈ <code>0.79 × feedwater M alk</code> with full carbonate breakdown. Capacities and leakage are typical for Type 2 / Type 1 strong base anion resin; caustic is on a 100% NaOH basis.</p>
     </section>
 
     <!-- ============ FEED ============ -->
@@ -371,6 +391,11 @@ footer.disc { grid-column: 1 / -1; font-size: 12px; color: var(--muted); border-
           <tr><td>1 meq/L</td><td>50.04 ppm as CaCO₃</td></tr>
           <tr><td>Ca as ion → as CaCO₃</td><td>× 2.497</td></tr>
           <tr><td>Mg as ion → as CaCO₃</td><td>× 4.118</td></tr>
+          <tr><td>SO₄ as ion → as CaCO₃</td><td>× 1.042</td></tr>
+          <tr><td>NO₃ as ion → as CaCO₃</td><td>× 0.807</td></tr>
+          <tr><td>ppm as CaCO₃ → as Cl</td><td>× 0.709</td></tr>
+          <tr><td>CO₂ released from M alkalinity</td><td>0.79 ppm CO₂ per ppm as CaCO₃ (full breakdown)</td></tr>
+          <tr><td>50% caustic soda</td><td>12.76 lb/gal · 6.38 lb NaOH per gallon</td></tr>
           <tr><td>SO₃ → Na₂SO₃</td><td>× 1.574</td></tr>
           <tr><td>O₂ demand, sodium sulfite</td><td>7.88 ppm Na₂SO₃ per ppm O₂</td></tr>
           <tr><td>PO₄ → Na₃PO₄</td><td>× 1.726</td></tr>
@@ -398,7 +423,7 @@ footer.disc { grid-column: 1 / -1; font-size: 12px; color: var(--muted); border-
     </section>
   </main>
 
-  <footer class="disc">Field estimates for surveys, service reports and proposals. Confirm against the boiler manufacturer's limits, the resin or membrane manufacturer's design software, and your company's program guidelines before making a recommendation.</footer>
+  <footer class="disc">Field estimates for surveys, service reports and proposals. Confirm against the boiler manufacturer's limits, the resin manufacturer's data, and your company's program guidelines before making a recommendation.</footer>
 </div>
 
 <script>
@@ -463,6 +488,7 @@ footer.disc { grid-column: 1 / -1; font-size: 12px; color: var(--muted); border-
   var HFG = { 0: 970.3, 5: 960.1, 15: 945.4 };
   var DO = [[32,14.6],[50,11.3],[68,9.1],[86,7.6],[104,6.4],[122,5.5],[140,4.7],[158,3.8],[176,2.8],[194,1.6],[212,0]];
   var SALT_CAP = { 6: 20000, 8: 22500, 10: 25000, 12: 27000, 15: 30000 };
+  var SIZES = [1, 1.5, 2, 2.5, 3, 4, 5, 7, 10, 15, 20, 25, 30, 40, 50, 60, 75, 100, 150];
 
   /* ---------- calculators ---------- */
   function hardness() {
@@ -479,10 +505,6 @@ footer.disc { grid-column: 1 / -1; font-size: 12px; color: var(--muted); border-
       { k: "Calcium hardness", v: auto(caH), u: "ppm CaCO₃" },
       { k: "Magnesium hardness", v: auto(mgH), u: "ppm CaCO₃" },
       { k: "Total hardness", v: auto(th / 17.12), u: "gpg" }
-    ]);
-    var tds = num("h_cond") * num("h_fac");
-    render("h_out3", { k: "Estimated TDS", v: auto(tds), u: "ppm" }, [
-      { k: "Back-calculated conductivity", v: auto(tds / num("h_fac")), u: "µS/cm" }
     ]);
   }
 
@@ -503,28 +525,58 @@ footer.disc { grid-column: 1 / -1; font-size: 12px; color: var(--muted); border-
       { k: "Time between regenerations", v: days >= 1 ? auto(days) : auto(days * 24), u: days >= 1 ? "days" : "hours" },
       { k: "Salt per regeneration", v: auto(saltRegen), u: "lb" },
       { k: "Salt per month", v: auto(saltRegen * regensMonth), u: "lb" },
-      { k: "Salt efficiency", v: fmt(cap / salt), u: "gr/lb" }
+      { k: "Salt efficiency", v: fmt(cap / salt), u: "gr/lb" },
+      { k: "Service rate at peak flow", v: fmt(num("z_peak") / ft3, 1), u: "gpm/ft³" }
     ], note);
+
+    var need = num("s_use") * num("z_days") * gpg / (cap * (1 - num("s_res") / 100));
+    var size = SIZES.filter(function (x) { return x >= need; })[0];
+    var rate = num("z_peak") / size;
+    var rateSt = rate > 8 ? ["bad", "too high"] : rate > 5 ? ["warn", "peak only"] : ["ok", "ok"];
+    var minFt3 = num("z_peak") / 8;
+    render("z_out", { k: "Resin needed per tank", v: auto(need), u: "ft³" }, [
+      { k: "Next standard size", v: size ? fmt(size, size % 1 ? 1 : 0) : "> 150", u: "ft³" },
+      { k: "Service rate at peak, that size", v: fmt(rate, 1), u: "gpm/ft³", st: rateSt[0], stt: rateSt[1] },
+      { k: "Minimum resin for peak flow", v: auto(minFt3), u: "ft³" },
+      { k: "Salt per regeneration", v: size ? auto(size * salt) : "—", u: "lb" }
+    ], minFt3 > need ? { t: "Peak flow, not capacity, sets the resin volume here. Size for at least " + auto(minFt3) + " ft³.", cls: "warn" } : null);
   }
 
-  function ro() {
-    var qf = num("ro_qf"), qp = num("ro_qp"), cf = num("ro_cf"), cp = num("ro_cp");
-    var rec = qp / qf, qc = qf - qp, cfac = 1 / (1 - rec);
-    var rej = 1 - cp / cf;
-    var cc = (cf * qf - cp * qp) / qc;
-    var flux = qp * 1440 / (num("ro_n") * num("ro_a"));
-    var rejSt = rej >= 0.97 ? ["ok", "good"] : rej >= 0.95 ? ["warn", "watch"] : ["bad", "low"];
-    var fluxSt = flux > 20 ? ["warn", "high"] : flux < 8 ? ["warn", "low"] : ["ok", "typical"];
-    var note = qp >= qf ? { t: "Permeate flow must be less than feed flow.", cls: "bad" } : null;
-    render("ro_out", { k: "Recovery", v: fmt(rec * 100, 1), u: "%" }, [
-      { k: "Salt rejection", v: fmt(rej * 100, 1), u: "%", st: rejSt[0], stt: rejSt[1] },
-      { k: "Salt passage", v: fmt((1 - rej) * 100, 1), u: "%" },
-      { k: "Concentrate flow", v: auto(qc), u: "gpm" },
-      { k: "Concentration factor", v: fmt(cfac, 2), u: "×" },
-      { k: "Concentrate conductivity (est.)", v: auto(cc), u: "µS/cm" },
-      { k: "Average flux", v: fmt(flux, 1), u: "gfd", st: fluxSt[0], stt: fluxSt[1] },
-      { k: "Permeate per day", v: fmt(qp * 1440), u: "gal" }
-    ], note);
+  function dealk() {
+    var alk = num("d_alk"), so4 = num("d_so4") * 1.042, no3 = num("d_no3") * 0.807;
+    var load = alk + so4 + no3, gpg = load / 17.12;
+    var ft3 = num("d_resin"), cap = num("d_cap");
+    var gal = ft3 * cap * (1 - num("d_res") / 100) / gpg;
+    var days = gal / num("d_use");
+    var caustic = $("d_regen").value === "caustic" ? 0.5 * ft3 : 0;
+    var effAlk = alk * num("d_leak") / 100;
+    var clAdded = (alk - effAlk + so4 + no3) * 0.709;
+    render("d_out", { k: "Gallons between regenerations", v: auto(gal), u: "gal" }, [
+      { k: "Anion load", v: auto(gpg), u: "gpg" },
+      { k: "Time between regenerations", v: days >= 1 ? auto(days) : auto(days * 24), u: days >= 1 ? "days" : "hours" },
+      { k: "Salt per regeneration", v: auto(5 * ft3), u: "lb" },
+      { k: "Caustic per regeneration", v: auto(caustic), u: "lb NaOH" },
+      { k: "Caustic as 50% liquid", v: auto(caustic / 0.5 / 12.76), u: "gal" },
+      { k: "Outlet alkalinity", v: auto(effAlk), u: "ppm CaCO₃" },
+      { k: "Chloride added", v: auto(clAdded), u: "ppm Cl" }
+    ], days < 1 ? { t: "Regenerates more than once a day. Check for a twin alternating unit or more resin.", cls: "warn" } : null);
+
+    var mu = 1 - num("d_cr") / 100, lim = num("d_lim");
+    var fw1 = alk * mu, fw2 = effAlk * mu;
+    var c1 = lim / fw1, c2 = lim / fw2;
+    render("d_out2", { k: "Cycles allowed by alkalinity", v: fmt(c1, 1) + " → " + fmt(c2, 1), u: "" }, [
+      { k: "Feedwater alkalinity, before", v: auto(fw1), u: "ppm CaCO₃" },
+      { k: "Feedwater alkalinity, after", v: auto(fw2), u: "ppm CaCO₃" },
+      { k: "CO₂ in steam, before", v: auto(0.79 * fw1), u: "ppm" },
+      { k: "CO₂ in steam, after", v: auto(0.79 * fw2), u: "ppm" },
+      { k: "Blowdown at alkalinity limit", v: fmt(100 / c1, 1) + " → " + fmt(100 / c2, 1), u: "% of FW" }
+    ], { t: "Less CO₂ in the steam means lower condensate corrosion and less neutralizing amine. Check that silica or conductivity does not become the new cycles limit.", cls: "" });
+  }
+
+  function fillDealk() {
+    var c = $("d_regen").value === "caustic";
+    $("d_cap").value = c ? 11000 : 8000;
+    $("d_leak").value = c ? 7 : 12;
   }
 
   function feed() {
@@ -666,13 +718,14 @@ footer.disc { grid-column: 1 / -1; font-size: 12px; color: var(--muted); border-
   }
 
   /* ---------- wiring ---------- */
-  var CALCS = { hardness: hardness, softener: softener, ro: ro, feed: feed, cycles: cycles, limits: limits, scavenger: scavenger, savings: savings };
-  var KEY = "bpfc-inputs-v1";
+  var CALCS = { hardness: hardness, softener: softener, dealk: dealk, feed: feed, cycles: cycles, limits: limits, scavenger: scavenger, savings: savings };
+  var KEY = "bpfc-inputs-v2";
   var fields = function () { return Array.prototype.slice.call(document.querySelectorAll("main input, main select")); };
 
   buildRef();
   var defaults = {};
   fillLimits();
+  fillDealk();
   fields().forEach(function (el) { defaults[el.id] = el.value; });
 
   try {
@@ -687,6 +740,7 @@ footer.disc { grid-column: 1 / -1; font-size: 12px; color: var(--muted); border-
 
   document.querySelector("main").addEventListener("input", function (e) {
     if (e.target.id === "l_type") fillLimits();
+    if (e.target.id === "d_regen") fillDealk();
     var sec = e.target.closest("section.calc");
     if (sec && CALCS[sec.id]) CALCS[sec.id]();
     save();
