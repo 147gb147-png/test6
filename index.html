@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Boiler &amp; Pretreatment Field Calc</title>
+<title>Water Treatment Payback Calc</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
-/* Layout: field-manual tool — section index on the left (chip row on phones), one calculator at a time: inputs beside a results readout. */
+/* Layout: field-manual tool — section index on the left (chip row on phones), one project at a time: inputs beside a payback readout. */
 :root {
   --bg: #eef3f3;
   --surface: #ffffff;
@@ -60,19 +60,24 @@ header.top p { margin: 0; color: var(--muted); font-size: 14px; }
 nav.index { position: sticky; top: 16px; align-self: start; display: flex; flex-direction: column; gap: 18px; }
 nav.index .grp { display: flex; flex-direction: column; gap: 2px; }
 nav.index .grp-h { font: 600 12px var(--display); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); padding: 0 10px 4px; }
-nav.index a { color: var(--ink); text-decoration: none; padding: 6px 10px; border-radius: var(--r); font-weight: 500; border-left: 3px solid transparent; }
+nav.index a { color: var(--ink); text-decoration: none; padding: 6px 10px; border-radius: var(--r); font-weight: 500; border-left: 3px solid transparent; display: flex; justify-content: space-between; gap: 8px; }
 nav.index a:hover { background: var(--sunk); }
 nav.index a[aria-current="true"] { background: var(--surface); border-left-color: var(--accent); color: var(--accent); }
+nav.index a .pb { font: 12px var(--mono); color: var(--muted); white-space: nowrap; }
 
 main { min-width: 0; }
 section.calc { display: none; }
 section.calc.on { display: block; }
 .calc > h2 { font: 700 28px/1.1 var(--display); margin: 2px 0 4px; text-wrap: balance; }
-.calc > .lede { margin: 0 0 18px; color: var(--muted); max-width: 68ch; }
+.calc > .lede { margin: 0 0 12px; color: var(--muted); max-width: 70ch; }
+.basisline { font-size: 13px; color: var(--muted); background: var(--sunk); border-radius: var(--r); padding: 6px 10px; margin: 0 0 18px; }
+.basisline a { color: var(--accent); }
 
 .panel { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; margin-bottom: 22px; }
 .panel > * { min-width: 0; }
 .panel-h { grid-column: 1 / -1; font: 600 15px var(--display); letter-spacing: .1em; text-transform: uppercase; color: var(--accent); margin: 0; border-bottom: 1px solid var(--line); padding-bottom: 4px; }
+.col { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.sub { font: 600 13px var(--display); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin: 0 0 -6px; }
 
 .fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 14px; align-content: start; }
 .f { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
@@ -81,11 +86,12 @@ section.calc.on { display: block; }
 .f .in { display: flex; align-items: stretch; border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); overflow: hidden; }
 .f .in:focus-within { border-color: var(--accent); }
 .f input, .f select { flex: 1; min-width: 0; border: 0; background: transparent; color: var(--ink); font: 500 15px var(--mono); padding: 8px 10px; outline: none; }
+.f input::placeholder { color: var(--muted); }
 .f select { font-family: var(--body); font-weight: 500; }
 .f .u { display: flex; align-items: center; padding: 0 10px; font: 12px var(--mono); color: var(--muted); background: var(--sunk); border-left: 1px solid var(--line); white-space: nowrap; }
 .f small { color: var(--muted); font-size: 12px; }
 
-.out { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 16px 18px; align-self: start; }
+.out { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 16px 18px; align-self: start; position: sticky; top: 16px; }
 .out .hero { display: flex; flex-direction: column; gap: 2px; padding-bottom: 12px; margin-bottom: 8px; border-bottom: 1px dashed var(--line); }
 .out .hero .k { font: 600 13px var(--display); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
 .out .hero .v { font: 600 36px/1.1 var(--mono); color: var(--pink); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
@@ -94,20 +100,28 @@ section.calc.on { display: block; }
 .out dt { color: var(--muted); font-size: 14px; }
 .out dd { margin: 0; text-align: right; font: 500 14px var(--mono); font-variant-numeric: tabular-nums; }
 .out dd .u { color: var(--muted); font-size: 12px; margin-left: 4px; }
+.out dt.sep { grid-column: 1 / -1; font: 600 12px var(--display); letter-spacing: .12em; text-transform: uppercase; color: var(--accent); border-top: 1px solid var(--line); padding-top: 8px; margin-top: 6px; }
+.out dt.tot, .out dd.tot { color: var(--ink); font-weight: 600; }
+.bar { display: flex; height: 10px; border-radius: 99px; overflow: hidden; background: var(--sunk); margin: 4px 0 2px; }
+.bar span { display: block; height: 100%; }
+.bar .s { background: var(--ok); } .bar .c { background: var(--warn); }
+.barkey { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-bottom: 8px; }
 .chip { display: inline-block; font: 600 11px var(--body); letter-spacing: .06em; text-transform: uppercase; padding: 2px 8px; border-radius: 99px; border: 1px solid currentColor; margin-left: 6px; vertical-align: 2px; }
 .chip.ok { color: var(--ok); } .chip.warn { color: var(--warn); } .chip.bad { color: var(--bad); }
 .note { margin-top: 12px; font-size: 13px; color: var(--muted); }
 .note.warn { color: var(--warn); } .note.bad { color: var(--bad); }
 
-.basis { font-size: 13px; color: var(--muted); max-width: 72ch; border-top: 1px solid var(--line); padding-top: 10px; }
+.basis { font-size: 13px; color: var(--muted); max-width: 76ch; border-top: 1px solid var(--line); padding-top: 10px; }
 .basis code { font: 12px var(--mono); color: var(--ink); background: var(--sunk); padding: 1px 5px; border-radius: 4px; }
 
 .tbl { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); margin-bottom: 22px; }
 table { border-collapse: collapse; width: 100%; font-size: 14px; }
 th, td { padding: 7px 12px; text-align: left; border-bottom: 1px solid var(--line); white-space: nowrap; }
 th { font: 600 12px var(--display); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); background: var(--sunk); }
-td.n { font-family: var(--mono); text-align: right; font-variant-numeric: tabular-nums; }
+th.n, td.n { font-family: var(--mono); text-align: right; font-variant-numeric: tabular-nums; }
+th.n { font-family: var(--display); }
 tr:last-child td { border-bottom: 0; }
+#summary td a { color: var(--accent); }
 
 footer.disc { grid-column: 1 / -1; font-size: 12px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 10px; max-width: 90ch; }
 
@@ -118,7 +132,9 @@ footer.disc { grid-column: 1 / -1; font-size: 12px; color: var(--muted); border-
   nav.index .grp-h { padding: 0 4px 0 0; }
   nav.index a { white-space: nowrap; border-left: 0; border-bottom: 3px solid transparent; border-radius: var(--r) var(--r) 0 0; }
   nav.index a[aria-current="true"] { border-bottom-color: var(--accent); }
+  nav.index a .pb { display: none; }
   .panel { grid-template-columns: minmax(0, 1fr); }
+  .out { position: static; }
 }
 @media (max-width: 420px) { .fields { grid-template-columns: minmax(0, 1fr); } }
 @media (prefers-reduced-motion: no-preference) { nav.index a { transition: background .12s; } }
@@ -127,303 +143,303 @@ footer.disc { grid-column: 1 / -1; font-size: 12px; color: var(--muted); border-
 <body>
 <div class="wrap">
   <header class="top">
-    <h1>Boiler &amp; Pretreatment Field Calc</h1>
-    <p>Everyday numbers for a water treatment tech rep. Results update as you type.</p>
+    <h1>Water Treatment Payback Calc</h1>
+    <p>Simple payback for pretreatment and boiler projects. Enter the site once; every project uses it.</p>
     <button class="btn" id="reset" type="button">Reset to example values</button>
   </header>
 
   <nav class="index" aria-label="Calculators">
-    <div class="grp"><span class="grp-h">Softener</span>
-      <a href="#hardness">Hardness units</a>
-      <a href="#softener">Softener</a>
+    <div class="grp"><span class="grp-h">Start here</span>
+      <a href="#site">Site &amp; costs</a>
+      <a href="#summary-tab">Compare projects</a>
     </div>
-    <div class="grp"><span class="grp-h">Dealkalizer</span>
-      <a href="#dealk">Dealkalizer</a>
+    <div class="grp"><span class="grp-h">Pretreatment</span>
+      <a href="#softener">Softener upgrade <span class="pb" data-pb="softener"></span></a>
+      <a href="#dealk">Dealkalizer <span class="pb" data-pb="dealk"></span></a>
+      <a href="#ro">Reverse osmosis <span class="pb" data-pb="ro"></span></a>
     </div>
     <div class="grp"><span class="grp-h">Boiler</span>
-      <a href="#cycles">Cycles &amp; blowdown</a>
-      <a href="#limits">Max cycles (ASME)</a>
-      <a href="#scavenger">Sulfite feed</a>
-      <a href="#feed">Chemical feed rate</a>
-      <a href="#savings">Blowdown savings</a>
+      <a href="#controller">Blowdown controller <span class="pb" data-pb="controller"></span></a>
+      <a href="#heatrec">Blowdown heat recovery <span class="pb" data-pb="heatrec"></span></a>
+      <a href="#condensate">Condensate return <span class="pb" data-pb="condensate"></span></a>
     </div>
     <div class="grp"><span class="grp-h">Reference</span>
-      <a href="#ref">Conversions &amp; limits</a>
+      <a href="#ref">Basis &amp; constants</a>
     </div>
   </nav>
 
   <main>
-    <!-- ============ HARDNESS ============ -->
-    <section class="calc" id="hardness">
-      <h2>Hardness units</h2>
-      <p class="lede">Convert a test kit or lab result between the units customers and lab reports use.</p>
-
+    <!-- ============ SITE ============ -->
+    <section class="calc" id="site">
+      <h2>Site &amp; costs</h2>
+      <p class="lede">The boiler, the water and the utility prices. Every payback uses these, so fill this in first from the survey or the customer's bills.</p>
       <div class="panel">
-        <h3 class="panel-h">Unit converter</h3>
-        <div class="fields">
-          <div class="f"><label for="h_val">Value</label><div class="in"><input id="h_val" type="number" step="any" value="12"></div></div>
-          <div class="f"><label for="h_unit">Unit</label><div class="in"><select id="h_unit">
-            <option value="gpg" selected>grains/gal (gpg)</option>
-            <option value="ppm">ppm as CaCO₃</option>
-            <option value="meq">meq/L</option>
-            <option value="ca">mg/L as Ca</option>
-            <option value="mg">mg/L as Mg</option>
-          </select></div></div>
-        </div>
-        <div class="out" id="h_out1"></div>
-      </div>
+        <div class="col">
+          <h3 class="sub">Boiler</h3>
+          <div class="fields">
+            <div class="f"><label for="x_steam">Average steam load</label><div class="in"><input id="x_steam" type="number" step="any" value="10350"><span class="u">lb/hr</span></div><small>1 BHP = 34.5 lb/hr</small></div>
+            <div class="f"><label for="x_hrs">Operating hours</label><div class="in"><input id="x_hrs" type="number" step="any" value="8000"><span class="u">hr/yr</span></div></div>
+            <div class="f"><label for="x_psig">Operating pressure</label><div class="in"><input id="x_psig" type="number" step="any" value="125"><span class="u">psig</span></div></div>
+            <div class="f"><label for="x_cyc">Current cycles</label><div class="in"><input id="x_cyc" type="number" step="any" value="6"></div><small>Measured, not the target</small></div>
+            <div class="f"><label for="x_cr">Condensate return</label><div class="in"><input id="x_cr" type="number" step="any" value="50"><span class="u">% of steam</span></div></div>
+            <div class="f"><label for="x_eff">Boiler efficiency</label><div class="in"><input id="x_eff" type="number" step="any" value="80"><span class="u">%</span></div></div>
+            <div class="f"><label for="x_tmu">Makeup temperature</label><div class="in"><input id="x_tmu" type="number" step="any" value="55"><span class="u">°F</span></div></div>
+            <div class="f"><label for="x_tc">Condensate temperature</label><div class="in"><input id="x_tc" type="number" step="any" value="180"><span class="u">°F</span></div></div>
+          </div>
 
-      <div class="panel">
-        <h3 class="panel-h">Total hardness from calcium &amp; magnesium</h3>
-        <div class="fields">
-          <div class="f"><label for="h_ca">Calcium</label><div class="in"><input id="h_ca" type="number" step="any" value="60"><span class="u">mg/L as Ca</span></div></div>
-          <div class="f"><label for="h_mg">Magnesium</label><div class="in"><input id="h_mg" type="number" step="any" value="18"><span class="u">mg/L as Mg</span></div></div>
-        </div>
-        <div class="out" id="h_out2"></div>
-      </div>
+          <h3 class="sub">Makeup water (after the softener)</h3>
+          <div class="fields">
+            <div class="f"><label for="x_hard">Raw water hardness</label><div class="in"><input id="x_hard" type="number" step="any" value="205"><span class="u">ppm CaCO₃</span></div></div>
+            <div class="f"><label for="x_alk">M alkalinity</label><div class="in"><input id="x_alk" type="number" step="any" value="180"><span class="u">ppm CaCO₃</span></div></div>
+            <div class="f"><label for="x_si">Silica</label><div class="in"><input id="x_si" type="number" step="any" value="12"><span class="u">ppm SiO₂</span></div></div>
+            <div class="f"><label for="x_cond">Conductivity</label><div class="in"><input id="x_cond" type="number" step="any" value="520"><span class="u">µS/cm</span></div></div>
+            <div class="f"><label for="x_so4">Sulfate</label><div class="in"><input id="x_so4" type="number" step="any" value="40"><span class="u">mg/L SO₄</span></div></div>
+            <div class="f"><label for="x_no3">Nitrate</label><div class="in"><input id="x_no3" type="number" step="any" value="5"><span class="u">mg/L NO₃</span></div></div>
+          </div>
 
-      <p class="basis">1 gpg = <code>17.12 ppm as CaCO₃</code> · 1 meq/L = <code>50.04 ppm as CaCO₃</code> · Ca → CaCO₃ <code>× 2.497</code> · Mg → CaCO₃ <code>× 4.118</code></p>
+          <h3 class="sub">Boiler water limits</h3>
+          <div class="fields">
+            <div class="f wide"><label for="x_type">Boiler type / pressure</label><div class="in"><select id="x_type"></select></div><small>Fills the limits below; overwrite with your program limits</small></div>
+            <div class="f"><label for="x_lsi">Silica limit</label><div class="in"><input id="x_lsi" type="number" step="any"><span class="u">ppm</span></div></div>
+            <div class="f"><label for="x_lalk">Alkalinity limit</label><div class="in"><input id="x_lalk" type="number" step="any"><span class="u">ppm</span></div></div>
+            <div class="f"><label for="x_lcond">Conductivity limit</label><div class="in"><input id="x_lcond" type="number" step="any"><span class="u">µS/cm</span></div></div>
+            <div class="f"><label for="x_margin">Control margin</label><div class="in"><input id="x_margin" type="number" step="any" value="10"><span class="u">% under limit</span></div></div>
+          </div>
+
+          <h3 class="sub">Prices</h3>
+          <div class="fields">
+            <div class="f"><label for="x_fuel">Fuel</label><div class="in"><input id="x_fuel" type="number" step="any" value="6"><span class="u">$/MMBtu</span></div><small>Natural gas: $/therm × 10</small></div>
+            <div class="f"><label for="x_water">Water</label><div class="in"><input id="x_water" type="number" step="any" value="5"><span class="u">$/1000 gal</span></div></div>
+            <div class="f"><label for="x_sewer">Sewer</label><div class="in"><input id="x_sewer" type="number" step="any" value="7"><span class="u">$/1000 gal</span></div></div>
+            <div class="f"><label for="x_kwh">Electricity</label><div class="in"><input id="x_kwh" type="number" step="any" value="0.10"><span class="u">$/kWh</span></div></div>
+            <div class="f"><label for="x_salt">Salt</label><div class="in"><input id="x_salt" type="number" step="any" value="200"><span class="u">$/ton</span></div></div>
+            <div class="f"><label for="x_caustic">Caustic, 50%</label><div class="in"><input id="x_caustic" type="number" step="any" value="3.50"><span class="u">$/gal</span></div></div>
+            <div class="f"><label for="x_chem">Internal treatment spend</label><div class="in"><input id="x_chem" type="number" step="any" value="25000"><span class="u">$/yr</span></div><small>Scale, sludge &amp; O₂ control; scales with blowdown</small></div>
+            <div class="f"><label for="x_amine">Condensate treatment spend</label><div class="in"><input id="x_amine" type="number" step="any" value="12000"><span class="u">$/yr</span></div><small>Neutralizing amine; scales with CO₂ load</small></div>
+          </div>
+        </div>
+        <div class="out" id="site_out"></div>
+      </div>
+    </section>
+
+    <!-- ============ SUMMARY ============ -->
+    <section class="calc" id="summary-tab">
+      <h2>Compare projects</h2>
+      <p class="lede">Every project side by side, using the current site inputs. Projects are evaluated one at a time against today's operation, so savings do not add up across rows.</p>
+      <div class="tbl"><table id="summary">
+        <thead><tr><th>Project</th><th class="n">Capital</th><th class="n">Savings / yr</th><th class="n">Operating cost / yr</th><th class="n">Net / yr</th><th class="n">Payback</th><th class="n">5-year net</th></tr></thead>
+        <tbody></tbody>
+      </table></div>
     </section>
 
     <!-- ============ SOFTENER ============ -->
     <section class="calc" id="softener">
-      <h2>Softener</h2>
-      <p class="lede">Gallons between regenerations, salt use, and resin sizing. Capacity is from the salt dose on standard 8% crosslinked cation resin.</p>
-      <h3 class="panel-h" style="margin-bottom:12px">Run length on an existing unit</h3>
+      <h2>Softener upgrade</h2>
+      <p class="lede">Replace timer regeneration with metered (demand) regeneration and a more efficient salt dose, or move to a counter-current unit that uses less regeneration water.</p>
+      <p class="basisline" data-basis></p>
       <div class="panel">
-        <div class="fields">
-          <div class="f"><label for="s_hard">Raw water hardness</label><div class="in"><input id="s_hard" type="number" step="any" value="205"><span class="u">ppm CaCO₃</span></div></div>
-          <div class="f"><label for="s_fe">Iron (optional)</label><div class="in"><input id="s_fe" type="number" step="any" value="0"><span class="u">ppm Fe</span></div><small>Adds 5 gpg per ppm Fe (compensated hardness)</small></div>
-          <div class="f"><label for="s_resin">Resin volume per tank</label><div class="in"><input id="s_resin" type="number" step="any" value="10"><span class="u">ft³</span></div></div>
-          <div class="f"><label for="s_salt">Salt dose</label><div class="in"><select id="s_salt">
-            <option value="6">6 lb/ft³ — 20,000 gr/ft³</option>
-            <option value="8">8 lb/ft³ — 22,500 gr/ft³</option>
-            <option value="10">10 lb/ft³ — 25,000 gr/ft³</option>
-            <option value="12">12 lb/ft³ — 27,000 gr/ft³</option>
-            <option value="15" selected>15 lb/ft³ — 30,000 gr/ft³</option>
-          </select></div></div>
-          <div class="f"><label for="s_use">Water use</label><div class="in"><input id="s_use" type="number" step="any" value="8000"><span class="u">gal/day</span></div></div>
-          <div class="f"><label for="s_res">Reserve / safety</label><div class="in"><input id="s_res" type="number" step="any" value="10"><span class="u">%</span></div></div>
+        <div class="col">
+          <h3 class="sub">Today</h3>
+          <div class="fields">
+            <div class="f"><label for="k_resin">Resin per tank</label><div class="in"><input id="k_resin" type="number" step="any" value="30"><span class="u">ft³</span></div></div>
+            <div class="f"><label for="k_reg">Regenerations now</label><div class="in"><input id="k_reg" type="number" step="any" value="7"><span class="u">per week</span></div><small>All tanks combined</small></div>
+            <div class="f"><label for="k_salt0">Salt dose now</label><div class="in"><select id="k_salt0" class="saltsel" data-def="15"></select></div></div>
+            <div class="f"><label for="k_w0">Regeneration water now</label><div class="in"><input id="k_w0" type="number" step="any" value="75"><span class="u">gal/ft³</span></div><small>Co-current 60–75 · counter-current 35–45</small></div>
+            <div class="f wide"><label for="k_other">Other softened water use</label><div class="in"><input id="k_other" type="number" step="any" value="0"><span class="u">gal/day</span></div><small>Added to boiler makeup</small></div>
+          </div>
+          <h3 class="sub">Proposed</h3>
+          <div class="fields">
+            <div class="f"><label for="k_salt1">Salt dose</label><div class="in"><select id="k_salt1" class="saltsel" data-def="8"></select></div></div>
+            <div class="f"><label for="k_w1">Regeneration water</label><div class="in"><input id="k_w1" type="number" step="any" value="40"><span class="u">gal/ft³</span></div></div>
+            <div class="f"><label for="k_res">Reserve before regen</label><div class="in"><input id="k_res" type="number" step="any" value="10"><span class="u">%</span></div></div>
+            <div class="f"><label for="k_cap">Installed cost</label><div class="in"><input id="k_cap" type="number" step="any" value="18000"><span class="u">$</span></div></div>
+            <div class="f"><label for="k_opex">Added maintenance</label><div class="in"><input id="k_opex" type="number" step="any" value="0"><span class="u">$/yr</span></div></div>
+          </div>
         </div>
-        <div class="out" id="s_out"></div>
+        <div class="out" id="softener_out"></div>
       </div>
-
-      <div class="panel">
-        <h3 class="panel-h">Size a new softener</h3>
-        <div class="fields">
-          <div class="f"><label for="z_days">Target time between regens</label><div class="in"><input id="z_days" type="number" step="any" value="3"><span class="u">days</span></div><small>Uses hardness, salt dose, water use and reserve from above</small></div>
-          <div class="f"><label for="z_peak">Peak service flow</label><div class="in"><input id="z_peak" type="number" step="any" value="40"><span class="u">gpm</span></div></div>
-        </div>
-        <div class="out" id="z_out"></div>
-      </div>
-      <p class="basis">Gallons per regen = <code>ft³ × capacity × (1 − reserve) ÷ hardness (gpg)</code> · Resin needed = <code>gal/day × days × gpg ÷ (capacity × (1 − reserve))</code> · Service rate = <code>gpm ÷ ft³</code>, typically 1–5 gpm/ft³ continuous and up to about 8 gpm/ft³ peak. Capacities are typical vendor-curve values; use the resin data sheet for a design.</p>
+      <p class="basis">Regenerations needed = <code>makeup gal × hardness gpg ÷ (ft³ × capacity × (1 − reserve))</code>. Capacity by salt dose is for standard 8% crosslinked cation resin. Savings are salt and regeneration water (water + sewer). Hardness leakage and scale fuel penalties are not counted.</p>
     </section>
 
-    <!-- ============ DEALKALIZER ============ -->
+    <!-- ============ DEALK ============ -->
     <section class="calc" id="dealk">
       <h2>Dealkalizer</h2>
-      <p class="lede">Run length and regenerant use for a chloride-cycle (salt-split) dealkalizer, and what removing alkalinity does for boiler cycles and condensate CO₂. Feed it softened water.</p>
+      <p class="lede">A chloride-cycle dealkalizer after the softener removes most of the alkalinity. That raises the cycles the boiler can run and cuts the CO₂ that ends up in the condensate.</p>
+      <p class="basisline" data-basis></p>
       <div class="panel">
-        <h3 class="panel-h">Run length</h3>
-        <div class="fields">
-          <div class="f"><label for="d_alk">Inlet M alkalinity</label><div class="in"><input id="d_alk" type="number" step="any" value="180"><span class="u">ppm CaCO₃</span></div></div>
-          <div class="f"><label for="d_so4">Sulfate</label><div class="in"><input id="d_so4" type="number" step="any" value="40"><span class="u">mg/L SO₄</span></div></div>
-          <div class="f"><label for="d_no3">Nitrate</label><div class="in"><input id="d_no3" type="number" step="any" value="5"><span class="u">mg/L NO₃</span></div></div>
-          <div class="f"><label for="d_resin">Resin volume per tank</label><div class="in"><input id="d_resin" type="number" step="any" value="20"><span class="u">ft³</span></div></div>
-          <div class="f wide"><label for="d_regen">Regeneration</label><div class="in"><select id="d_regen">
-            <option value="salt">Salt only, 5 lb/ft³</option>
-            <option value="caustic" selected>Salt 5 lb/ft³ + caustic 0.5 lb/ft³</option>
-          </select></div></div>
-          <div class="f"><label for="d_cap">Resin capacity</label><div class="in"><input id="d_cap" type="number" step="any"><span class="u">gr/ft³</span></div><small>Fills from regeneration; overwrite with vendor data</small></div>
-          <div class="f"><label for="d_leak">Alkalinity leakage</label><div class="in"><input id="d_leak" type="number" step="any"><span class="u">% of inlet</span></div></div>
-          <div class="f"><label for="d_use">Water use</label><div class="in"><input id="d_use" type="number" step="any" value="8000"><span class="u">gal/day</span></div></div>
-          <div class="f"><label for="d_res">Reserve / safety</label><div class="in"><input id="d_res" type="number" step="any" value="10"><span class="u">%</span></div></div>
+        <div class="col">
+          <div class="fields">
+            <div class="f wide"><label for="d_regen">Regeneration</label><div class="in"><select id="d_regen">
+              <option value="salt">Salt only, 5 lb/ft³</option>
+              <option value="caustic" selected>Salt 5 lb/ft³ + caustic 0.5 lb/ft³</option>
+            </select></div></div>
+            <div class="f"><label for="d_capy">Resin capacity</label><div class="in"><input id="d_capy" type="number" step="any"><span class="u">gr/ft³</span></div><small>Fills from regeneration</small></div>
+            <div class="f"><label for="d_leak">Alkalinity leakage</label><div class="in"><input id="d_leak" type="number" step="any"><span class="u">% of inlet</span></div></div>
+            <div class="f"><label for="d_w">Regeneration water</label><div class="in"><input id="d_w" type="number" step="any" value="60"><span class="u">gal/ft³</span></div></div>
+            <div class="f"><label for="d_resin">Resin installed</label><div class="in"><input id="d_resin" type="number" step="any" value="40"><span class="u">ft³</span></div></div>
+            <div class="f"><label for="d_resp">Resin price</label><div class="in"><input id="d_resp" type="number" step="any" value="250"><span class="u">$/ft³</span></div></div>
+            <div class="f"><label for="d_life">Resin life</label><div class="in"><input id="d_life" type="number" step="any" value="7"><span class="u">years</span></div></div>
+            <div class="f"><label for="d_cap">Installed cost</label><div class="in"><input id="d_cap" type="number" step="any" value="85000"><span class="u">$</span></div></div>
+            <div class="f"><label for="d_opex">Added maintenance</label><div class="in"><input id="d_opex" type="number" step="any" value="1000"><span class="u">$/yr</span></div></div>
+          </div>
         </div>
-        <div class="out" id="d_out"></div>
+        <div class="out" id="dealk_out"></div>
       </div>
-
-      <div class="panel">
-        <h3 class="panel-h">Effect on the boiler</h3>
-        <div class="fields">
-          <div class="f"><label for="d_cr">Condensate return</label><div class="in"><input id="d_cr" type="number" step="any" value="50"><span class="u">% of feedwater</span></div></div>
-          <div class="f"><label for="d_lim">Boiler alkalinity limit</label><div class="in"><input id="d_lim" type="number" step="any" value="700"><span class="u">ppm CaCO₃</span></div><small>See Max cycles (ASME)</small></div>
-        </div>
-        <div class="out" id="d_out2"></div>
-      </div>
-      <p class="basis">The resin exchanges sulfate, nitrate and bicarbonate for chloride, so all three load it. Load (gpg) = <code>(M alk + SO₄ × 1.042 + NO₃ × 0.807) ÷ 17.12</code>. Chloride added = anions removed <code>× 0.709</code> as Cl. CO₂ in steam ≈ <code>0.79 × feedwater M alk</code> with full carbonate breakdown. Capacities and leakage are typical for Type 2 / Type 1 strong base anion resin; caustic is on a 100% NaOH basis.</p>
+      <p class="basis">The resin trades sulfate, nitrate and bicarbonate for chloride, so all three use capacity: load = <code>M alk + SO₄ × 1.042 + NO₃ × 0.807</code> as CaCO₃. Conductivity barely changes, so after a dealkalizer silica or conductivity usually becomes the cycles limit. Condensate treatment savings scale with makeup alkalinity load.</p>
     </section>
 
-    <!-- ============ FEED ============ -->
-    <section class="calc" id="feed">
-      <h2>Chemical feed rate</h2>
-      <p class="lede">Turn a target dose into a pump setting and how long a drum or tote will last.</p>
+    <!-- ============ RO ============ -->
+    <section class="calc" id="ro">
+      <h2>Reverse osmosis</h2>
+      <p class="lede">RO on softened makeup removes nearly all dissolved solids, so cycles are set by practical control limits instead of water chemistry. Reject water, power and membranes are the operating costs.</p>
+      <p class="basisline" data-basis></p>
       <div class="panel">
-        <div class="fields">
-          <div class="f"><label for="cf_q">Water flow treated</label><div class="in"><input id="cf_q" type="number" step="any" value="15"><span class="u">gpm</span></div><small>Use feedwater or makeup flow</small></div>
-          <div class="f"><label for="cf_ppm">Target dose (as product)</label><div class="in"><input id="cf_ppm" type="number" step="any" value="40"><span class="u">ppm</span></div></div>
-          <div class="f"><label for="cf_sg">Product specific gravity</label><div class="in"><input id="cf_sg" type="number" step="any" value="1.15"></div></div>
-          <div class="f"><label for="cf_hrs">Hours of operation</label><div class="in"><input id="cf_hrs" type="number" step="any" value="24"><span class="u">hr/day</span></div></div>
-          <div class="f"><label for="cf_drum">Container size</label><div class="in"><input id="cf_drum" type="number" step="any" value="55"><span class="u">gal</span></div><small>55 drum · 275 or 330 tote</small></div>
+        <div class="col">
+          <h3 class="sub">Performance</h3>
+          <div class="fields">
+            <div class="f"><label for="r_rec">Recovery</label><div class="in"><input id="r_rec" type="number" step="any" value="75"><span class="u">%</span></div></div>
+            <div class="f"><label for="r_rej">Salt &amp; silica rejection</label><div class="in"><input id="r_rej" type="number" step="any" value="98"><span class="u">%</span></div></div>
+            <div class="f"><label for="r_alkrej">Alkalinity reduction</label><div class="in"><input id="r_alkrej" type="number" step="any" value="90"><span class="u">%</span></div><small>Lower than salt rejection; CO₂ passes the membrane</small></div>
+            <div class="f"><label for="r_maxc">Practical maximum cycles</label><div class="in"><input id="r_maxc" type="number" step="any" value="50"></div></div>
+          </div>
+          <h3 class="sub">Operating cost</h3>
+          <div class="fields">
+            <div class="f"><label for="r_psi">Feed pressure</label><div class="in"><input id="r_psi" type="number" step="any" value="200"><span class="u">psig</span></div></div>
+            <div class="f"><label for="r_eff">Pump &amp; motor efficiency</label><div class="in"><input id="r_eff" type="number" step="any" value="65"><span class="u">%</span></div></div>
+            <div class="f"><label for="r_as">Antiscalant dose</label><div class="in"><input id="r_as" type="number" step="any" value="3"><span class="u">ppm</span></div></div>
+            <div class="f"><label for="r_asp">Antiscalant price</label><div class="in"><input id="r_asp" type="number" step="any" value="3"><span class="u">$/lb</span></div></div>
+            <div class="f"><label for="r_n">Membrane elements</label><div class="in"><input id="r_n" type="number" step="1" value="12"></div></div>
+            <div class="f"><label for="r_elp">Price per element</label><div class="in"><input id="r_elp" type="number" step="any" value="700"><span class="u">$</span></div></div>
+            <div class="f"><label for="r_life">Membrane life</label><div class="in"><input id="r_life" type="number" step="any" value="4"><span class="u">years</span></div></div>
+            <div class="f"><label for="r_cln">Cleanings</label><div class="in"><input id="r_cln" type="number" step="any" value="2"><span class="u">per year</span></div></div>
+            <div class="f"><label for="r_clnp">Cost per cleaning</label><div class="in"><input id="r_clnp" type="number" step="any" value="1500"><span class="u">$</span></div></div>
+            <div class="f"><label for="r_opex">Other maintenance</label><div class="in"><input id="r_opex" type="number" step="any" value="1500"><span class="u">$/yr</span></div><small>Cartridge filters, service</small></div>
+            <div class="f wide"><label for="r_cap">Installed cost</label><div class="in"><input id="r_cap" type="number" step="any" value="150000"><span class="u">$</span></div></div>
+          </div>
         </div>
-        <div class="out" id="cf_out"></div>
+        <div class="out" id="ro_out"></div>
       </div>
-      <p class="basis">lb/day = <code>gpm × 60 × hr/day × 8.34 × ppm ÷ 10⁶</code> · gal/day = <code>lb/day ÷ (SG × 8.34)</code> · 1 gal = 3,785 mL</p>
+      <p class="basis">Water purchased = <code>permeate ÷ recovery</code>; the reject is charged water and sewer. Power = <code>gpm × psi ÷ (1714 × efficiency) × 0.746</code> kW at the average feed flow. Upstream softening cost is unchanged and not included.</p>
     </section>
 
-    <!-- ============ CYCLES ============ -->
-    <section class="calc" id="cycles">
-      <h2>Cycles &amp; blowdown</h2>
-      <p class="lede">Feedwater, blowdown and makeup flows from boiler size and cycles of concentration.</p>
+    <!-- ============ CONTROLLER ============ -->
+    <section class="calc" id="controller">
+      <h2>Blowdown controller</h2>
+      <p class="lede">Manual blowdown usually runs well under the limit to stay safe. An automatic conductivity controller holds cycles close to the limit with the water you already have.</p>
+      <p class="basisline" data-basis></p>
       <div class="panel">
-        <div class="fields">
-          <div class="f"><label for="c_mode">Boiler size given as</label><div class="in"><select id="c_mode">
-            <option value="bhp" selected>Boiler horsepower</option>
-            <option value="lb">Steam lb/hr</option>
-          </select></div></div>
-          <div class="f"><label for="c_cap" id="c_cap_l">Rated size</label><div class="in"><input id="c_cap" type="number" step="any" value="500"><span class="u" id="c_cap_u">BHP</span></div></div>
-          <div class="f"><label for="c_load">Average firing rate</label><div class="in"><input id="c_load" type="number" step="any" value="60"><span class="u">% of rating</span></div></div>
-          <div class="f"><label for="c_cr">Condensate return</label><div class="in"><input id="c_cr" type="number" step="any" value="50"><span class="u">% of steam</span></div></div>
-          <div class="f wide"><label for="c_cmode">Cycles</label><div class="in"><select id="c_cmode">
-            <option value="direct" selected>Enter cycles directly</option>
-            <option value="cond">Calculate from boiler ÷ feedwater conductivity</option>
-            <option value="cl">Calculate from boiler ÷ feedwater chloride</option>
-          </select></div></div>
-          <div class="f" data-show="direct"><label for="c_cyc">Cycles of concentration</label><div class="in"><input id="c_cyc" type="number" step="any" value="15"></div></div>
-          <div class="f" data-show="cond cl"><label for="c_b" id="c_b_l">Boiler water</label><div class="in"><input id="c_b" type="number" step="any" value="3500"><span class="u" id="c_b_u">µS/cm</span></div><small id="c_b_s">Neutralized sample</small></div>
-          <div class="f" data-show="cond cl"><label for="c_f" id="c_f_l">Feedwater</label><div class="in"><input id="c_f" type="number" step="any" value="250"><span class="u" id="c_f_u">µS/cm</span></div></div>
+        <div class="col">
+          <div class="fields">
+            <div class="f wide"><label for="b_target">Cycles with automatic control</label><div class="in"><input id="b_target" type="number" step="any"></div><small id="b_hint">Leave blank to use the limit less the control margin</small></div>
+            <div class="f"><label for="b_cap">Installed cost</label><div class="in"><input id="b_cap" type="number" step="any" value="9000"><span class="u">$</span></div><small>Controller, probe, valve, install</small></div>
+            <div class="f"><label for="b_opex">Added maintenance</label><div class="in"><input id="b_opex" type="number" step="any" value="300"><span class="u">$/yr</span></div></div>
+          </div>
         </div>
-        <div class="out" id="c_out"></div>
+        <div class="out" id="controller_out"></div>
       </div>
-
-      <div class="panel">
-        <h3 class="panel-h">Condensate return from conductivity</h3>
-        <div class="fields">
-          <div class="f"><label for="r_fw">Feedwater</label><div class="in"><input id="r_fw" type="number" step="any" value="250"><span class="u">µS/cm</span></div></div>
-          <div class="f"><label for="r_mu">Makeup (softened)</label><div class="in"><input id="r_mu" type="number" step="any" value="520"><span class="u">µS/cm</span></div></div>
-          <div class="f"><label for="r_cd">Condensate</label><div class="in"><input id="r_cd" type="number" step="any" value="10"><span class="u">µS/cm</span></div></div>
-        </div>
-        <div class="out" id="r_out"></div>
-      </div>
-      <p class="basis">1 BHP = <code>34.5 lb/hr</code> from and at 212 °F · Feedwater = <code>steam × C ÷ (C − 1)</code> · Blowdown = <code>steam ÷ (C − 1)</code> · Makeup = <code>feedwater − condensate</code> · % makeup in FW = <code>(FW − cond) ÷ (MU − cond)</code></p>
+      <p class="basis">Same water, same limits; only the cycles change. Savings are blowdown water, sewer, the heat in the blowdown, and internal treatment that scales with blowdown.</p>
     </section>
 
-    <!-- ============ LIMITS ============ -->
-    <section class="calc" id="limits">
-      <h2>Max cycles (ASME guidelines)</h2>
-      <p class="lede">Find which feedwater constituent caps the cycles a boiler can run. Limits fill in from the pressure range and can be overwritten with your own program limits.</p>
+    <!-- ============ HEAT RECOVERY ============ -->
+    <section class="calc" id="heatrec">
+      <h2>Blowdown heat recovery</h2>
+      <p class="lede">A flash tank sends low-pressure steam to the deaerator, and a heat exchanger uses the remaining hot drain to preheat makeup.</p>
+      <p class="basisline" data-basis></p>
       <div class="panel">
-        <div class="fields">
-          <div class="f wide"><label for="l_type">Boiler type / pressure</label><div class="in"><select id="l_type"></select></div></div>
-          <div class="f"><label for="l_si">Feedwater silica</label><div class="in"><input id="l_si" type="number" step="any" value="8"><span class="u">ppm SiO₂</span></div></div>
-          <div class="f"><label for="l_lsi">Boiler silica limit</label><div class="in"><input id="l_lsi" type="number" step="any"><span class="u">ppm</span></div></div>
-          <div class="f"><label for="l_alk">Feedwater M alkalinity</label><div class="in"><input id="l_alk" type="number" step="any" value="60"><span class="u">ppm CaCO₃</span></div></div>
-          <div class="f"><label for="l_lalk">Boiler alkalinity limit</label><div class="in"><input id="l_lalk" type="number" step="any"><span class="u">ppm</span></div></div>
-          <div class="f"><label for="l_cond">Feedwater conductivity</label><div class="in"><input id="l_cond" type="number" step="any" value="250"><span class="u">µS/cm</span></div></div>
-          <div class="f"><label for="l_lcond">Boiler conductivity limit</label><div class="in"><input id="l_lcond" type="number" step="any"><span class="u">µS/cm</span></div></div>
-          <div class="f wide"><label for="l_cur">Current cycles (optional)</label><div class="in"><input id="l_cur" type="number" step="any" value="12"></div></div>
+        <div class="col">
+          <div class="fields">
+            <div class="f wide"><label for="h_mode">Equipment</label><div class="in"><select id="h_mode">
+              <option value="both" selected>Flash tank + heat exchanger</option>
+              <option value="flash">Flash tank only</option>
+              <option value="hx">Heat exchanger only</option>
+            </select></div></div>
+            <div class="f"><label for="h_ft">Flash tank pressure</label><div class="in"><select id="h_ft">
+              <option value="0">0 psig</option>
+              <option value="5" selected>5 psig</option>
+              <option value="15">15 psig</option>
+            </select></div><small>Match the deaerator</small></div>
+            <div class="f"><label for="h_out">Drain leaving exchanger</label><div class="in"><input id="h_out" type="number" step="any" value="90"><span class="u">°F</span></div></div>
+            <div class="f"><label for="h_cap">Installed cost</label><div class="in"><input id="h_cap" type="number" step="any" value="35000"><span class="u">$</span></div></div>
+            <div class="f"><label for="h_opex">Added maintenance</label><div class="in"><input id="h_opex" type="number" step="any" value="500"><span class="u">$/yr</span></div></div>
+          </div>
         </div>
-        <div class="out" id="l_out"></div>
+        <div class="out" id="heatrec_out"></div>
       </div>
-      <p class="basis">Allowed cycles = <code>boiler limit ÷ feedwater value</code>; the lowest one governs. Watertube limits are the upper values from the ASME consensus table for industrial drum boilers; firetube values are typical ABMA guidance. Run 10–20% under the limit for control swings.</p>
+      <p class="basis">Flash steam = <code>blowdown × (h<sub>f,boiler</sub> − h<sub>f,flash</sub>) ÷ h<sub>fg,flash</sub></code>. Exchanger heat = <code>drain lb × (h<sub>in</sub> − (T<sub>out</sub> − 32))</code>. Uses today's blowdown; if a cycles project goes in first, there is less to recover.</p>
     </section>
 
-    <!-- ============ SCAVENGER ============ -->
-    <section class="calc" id="scavenger">
-      <h2>Sulfite feed</h2>
-      <p class="lede">Sodium sulfite needed to remove feedwater oxygen and hold a boiler residual.</p>
+    <!-- ============ CONDENSATE ============ -->
+    <section class="calc" id="condensate">
+      <h2>Condensate return</h2>
+      <p class="lede">Returning more condensate saves its heat, the makeup water and chemicals that replace it, and blowdown, since less makeup brings in fewer solids.</p>
+      <p class="basisline" data-basis></p>
       <div class="panel">
-        <div class="fields">
-          <div class="f"><label for="o_fw">Feedwater flow</label><div class="in"><input id="o_fw" type="number" step="any" value="11100"><span class="u">lb/hr</span></div><small>From Cycles &amp; blowdown</small></div>
-          <div class="f"><label for="o_cyc">Cycles</label><div class="in"><input id="o_cyc" type="number" step="any" value="15"></div></div>
-          <div class="f wide"><label for="o_src">Feedwater oxygen</label><div class="in"><select id="o_src">
-            <option value="da">Deaerator, working properly (0.007 ppm)</option>
-            <option value="tank" selected>Vented feed tank, from temperature</option>
-            <option value="custom">Measured value</option>
-          </select></div></div>
-          <div class="f" data-oshow="tank"><label for="o_temp">Feed tank temperature</label><div class="in"><input id="o_temp" type="number" step="any" value="190"><span class="u">°F</span></div></div>
-          <div class="f" data-oshow="custom"><label for="o_do">Measured DO</label><div class="in"><input id="o_do" type="number" step="any" value="0.5"><span class="u">ppm O₂</span></div></div>
-          <div class="f"><label for="o_res">Boiler sulfite residual</label><div class="in"><input id="o_res" type="number" step="any" value="30"><span class="u">ppm SO₃</span></div><small>20–40 typical below 300 psig</small></div>
-          <div class="f"><label for="o_act">Product strength</label><div class="in"><input id="o_act" type="number" step="any" value="25"><span class="u">% Na₂SO₃</span></div></div>
-          <div class="f"><label for="o_sg">Product specific gravity</label><div class="in"><input id="o_sg" type="number" step="any" value="1.25"></div></div>
+        <div class="col">
+          <div class="fields">
+            <div class="f"><label for="q_cr">Proposed condensate return</label><div class="in"><input id="q_cr" type="number" step="any" value="75"><span class="u">% of steam</span></div></div>
+            <div class="f"><label for="q_drain">Lost condensate goes to</label><div class="in"><select id="q_drain">
+              <option value="sewer" selected>Sewer (pays sewer charge)</option>
+              <option value="other">Vent, leaks or ground</option>
+            </select></div></div>
+            <div class="f"><label for="q_cap">Installed cost</label><div class="in"><input id="q_cap" type="number" step="any" value="40000"><span class="u">$</span></div><small>Pumps, piping, receivers</small></div>
+            <div class="f"><label for="q_opex">Added maintenance &amp; power</label><div class="in"><input id="q_opex" type="number" step="any" value="1500"><span class="u">$/yr</span></div></div>
+          </div>
         </div>
-        <div class="out" id="o_out"></div>
+        <div class="out" id="condensate_out"></div>
       </div>
-      <p class="basis">7.88 ppm Na₂SO₃ per ppm O₂ (stoichiometric) · SO₃ → Na₂SO₃ <code>× 1.574</code> · FW excess = <code>boiler residual ÷ cycles</code>. Feed tank DO assumes air-saturated water at sea level; open tanks often run higher than this from inleakage.</p>
-    </section>
-
-    <!-- ============ SAVINGS ============ -->
-    <section class="calc" id="savings">
-      <h2>Blowdown savings</h2>
-      <p class="lede">What raising cycles is worth in fuel and water. Useful for a cost justification or a pretreatment upgrade proposal.</p>
-      <div class="panel">
-        <div class="fields">
-          <div class="f"><label for="v_steam">Steam load</label><div class="in"><input id="v_steam" type="number" step="any" value="10350"><span class="u">lb/hr</span></div></div>
-          <div class="f"><label for="v_psig">Operating pressure</label><div class="in"><input id="v_psig" type="number" step="any" value="125"><span class="u">psig</span></div></div>
-          <div class="f"><label for="v_c1">Current cycles</label><div class="in"><input id="v_c1" type="number" step="any" value="8"></div></div>
-          <div class="f"><label for="v_c2">Proposed cycles</label><div class="in"><input id="v_c2" type="number" step="any" value="20"></div></div>
-          <div class="f"><label for="v_mut">Makeup temperature</label><div class="in"><input id="v_mut" type="number" step="any" value="55"><span class="u">°F</span></div></div>
-          <div class="f"><label for="v_hrs">Operating hours</label><div class="in"><input id="v_hrs" type="number" step="any" value="8000"><span class="u">hr/yr</span></div></div>
-          <div class="f"><label for="v_fuel">Fuel cost</label><div class="in"><input id="v_fuel" type="number" step="any" value="6"><span class="u">$/MMBtu</span></div></div>
-          <div class="f"><label for="v_eff">Boiler efficiency</label><div class="in"><input id="v_eff" type="number" step="any" value="80"><span class="u">%</span></div></div>
-          <div class="f"><label for="v_wat">Water + sewer cost</label><div class="in"><input id="v_wat" type="number" step="any" value="12"><span class="u">$/1000 gal</span></div></div>
-          <div class="f"><label for="v_ft">Flash tank pressure</label><div class="in"><select id="v_ft">
-            <option value="0">0 psig</option>
-            <option value="5" selected>5 psig</option>
-            <option value="15">15 psig</option>
-          </select></div></div>
-        </div>
-        <div class="out" id="v_out"></div>
-      </div>
-      <p class="basis">Heat in blowdown = <code>lb/hr × (h<sub>f</sub> at boiler pressure − (makeup °F − 32))</code>. Fuel = heat ÷ efficiency. Flash % = <code>(h<sub>f,boiler</sub> − h<sub>f,flash</sub>) ÷ h<sub>fg,flash</sub></code>. Steam properties are interpolated from a saturated steam table. Chemical savings not included.</p>
+      <p class="basis">Boiler water concentration stays the same, so cycles rise as makeup falls: <code>C<sub>new</sub> = (C(1 − CR) + CR − CR<sub>new</sub>) ÷ (1 − CR<sub>new</sub>)</code>. Heat saved per lb of returned condensate = condensate °F − makeup °F.</p>
     </section>
 
     <!-- ============ REFERENCE ============ -->
     <section class="calc" id="ref">
-      <h2>Conversions &amp; limits</h2>
-      <p class="lede">The constants behind every calculator on this page.</p>
+      <h2>Basis &amp; constants</h2>
+      <p class="lede">How the paybacks are calculated, and the constants behind them.</p>
+      <div class="tbl"><table>
+        <thead><tr><th>Item</th><th>Basis</th></tr></thead>
+        <tbody>
+          <tr><td>Blowdown</td><td>steam ÷ (cycles − 1)</td></tr>
+          <tr><td>Feedwater · makeup</td><td>steam + blowdown · feedwater − returned condensate</td></tr>
+          <tr><td>Cycles allowed by a limit</td><td>(limit ÷ makeup value − CR) ÷ (1 − CR), then less the control margin</td></tr>
+          <tr><td>Heat lost to blowdown</td><td>lb × (h<sub>f</sub> at boiler pressure − (makeup °F − 32))</td></tr>
+          <tr><td>Heat lost with condensate</td><td>lb not returned × (condensate °F − makeup °F)</td></tr>
+          <tr><td>Fuel cost</td><td>heat ÷ boiler efficiency × $/MMBtu</td></tr>
+          <tr><td>Internal treatment</td><td>scales with blowdown</td></tr>
+          <tr><td>Condensate treatment</td><td>scales with makeup × makeup alkalinity (CO₂ load)</td></tr>
+          <tr><td>Simple payback</td><td>installed cost ÷ (annual savings − annual operating cost)</td></tr>
+          <tr><td>5-year net</td><td>5 × net annual savings − installed cost (no discounting)</td></tr>
+        </tbody>
+      </table></div>
       <div class="tbl"><table>
         <thead><tr><th>Quantity</th><th>Equals</th></tr></thead>
         <tbody>
-          <tr><td>1 boiler horsepower</td><td>34.5 lb/hr steam (from &amp; at 212 °F) · 33,475 Btu/hr</td></tr>
-          <tr><td>1 gpm water</td><td>≈ 500 lb/hr · 1,440 gal/day</td></tr>
-          <tr><td>1 gallon water</td><td>8.34 lb · 3.785 L</td></tr>
+          <tr><td>1 boiler horsepower</td><td>34.5 lb/hr steam · 33,475 Btu/hr</td></tr>
+          <tr><td>1 gallon water</td><td>8.34 lb</td></tr>
           <tr><td>1 grain per gallon</td><td>17.12 ppm as CaCO₃</td></tr>
-          <tr><td>1 meq/L</td><td>50.04 ppm as CaCO₃</td></tr>
-          <tr><td>Ca as ion → as CaCO₃</td><td>× 2.497</td></tr>
-          <tr><td>Mg as ion → as CaCO₃</td><td>× 4.118</td></tr>
-          <tr><td>SO₄ as ion → as CaCO₃</td><td>× 1.042</td></tr>
-          <tr><td>NO₃ as ion → as CaCO₃</td><td>× 0.807</td></tr>
-          <tr><td>ppm as CaCO₃ → as Cl</td><td>× 0.709</td></tr>
-          <tr><td>CO₂ released from M alkalinity</td><td>0.79 ppm CO₂ per ppm as CaCO₃ (full breakdown)</td></tr>
+          <tr><td>SO₄ · NO₃ as ion → as CaCO₃</td><td>× 1.042 · × 0.807</td></tr>
           <tr><td>50% caustic soda</td><td>12.76 lb/gal · 6.38 lb NaOH per gallon</td></tr>
-          <tr><td>SO₃ → Na₂SO₃</td><td>× 1.574</td></tr>
-          <tr><td>O₂ demand, sodium sulfite</td><td>7.88 ppm Na₂SO₃ per ppm O₂</td></tr>
-          <tr><td>PO₄ → Na₃PO₄</td><td>× 1.726</td></tr>
-          <tr><td>ppm</td><td>mg/L (for dilute water) · lb per million lb</td></tr>
+          <tr><td>1 therm</td><td>0.1 MMBtu</td></tr>
+          <tr><td>Pump power</td><td>kW = gpm × psi ÷ (1714 × eff) × 0.746</td></tr>
         </tbody>
       </table></div>
-
-      <h3 class="panel-h" style="margin-bottom:10px">Boiler water limits used by Max cycles</h3>
+      <h3 class="panel-h" style="margin-bottom:10px">Boiler water limits</h3>
       <div class="tbl"><table id="ref_limits">
-        <thead><tr><th>Boiler</th><th style="text-align:right">Silica, ppm SiO₂</th><th style="text-align:right">Total alkalinity, ppm CaCO₃</th><th style="text-align:right">Conductivity, µS/cm</th><th style="text-align:right">FW hardness, ppm</th></tr></thead>
+        <thead><tr><th>Boiler</th><th class="n">Silica, ppm</th><th class="n">Total alkalinity, ppm CaCO₃</th><th class="n">Conductivity, µS/cm</th></tr></thead>
         <tbody></tbody>
       </table></div>
-
-      <h3 class="panel-h" style="margin-bottom:10px">Saturated steam (used by Blowdown savings)</h3>
+      <h3 class="panel-h" style="margin-bottom:10px">Salt dose and softener capacity</h3>
+      <div class="tbl"><table id="ref_salt">
+        <thead><tr><th class="n">Salt, lb/ft³</th><th class="n">Capacity, gr/ft³</th><th class="n">Efficiency, gr/lb salt</th></tr></thead>
+        <tbody></tbody>
+      </table></div>
+      <h3 class="panel-h" style="margin-bottom:10px">Saturated steam</h3>
       <div class="tbl"><table id="ref_steam">
-        <thead><tr><th style="text-align:right">psig</th><th style="text-align:right">Temp, °F</th><th style="text-align:right">h<sub>f</sub>, Btu/lb</th></tr></thead>
-        <tbody></tbody>
-      </table></div>
-
-      <h3 class="panel-h" style="margin-bottom:10px">Oxygen solubility in water, air-saturated at 1 atm</h3>
-      <div class="tbl"><table id="ref_do">
-        <thead><tr><th style="text-align:right">°F</th><th style="text-align:right">ppm O₂</th></tr></thead>
+        <thead><tr><th class="n">psig</th><th class="n">Temp, °F</th><th class="n">h<sub>f</sub>, Btu/lb</th></tr></thead>
         <tbody></tbody>
       </table></div>
     </section>
   </main>
 
-  <footer class="disc">Field estimates for surveys, service reports and proposals. Confirm against the boiler manufacturer's limits, the resin manufacturer's data, and your company's program guidelines before making a recommendation.</footer>
+  <footer class="disc">Simple-payback estimates for surveys and proposals, before taxes, incentives and financing. Confirm equipment pricing with the vendor, limits with the boiler manufacturer and your program guidelines, and utility rates with the customer's bills.</footer>
 </div>
 
 <script>
@@ -438,311 +454,379 @@ footer.disc { grid-column: 1 / -1; font-size: 12px; color: var(--muted); border-
     d = d == null ? 0 : d;
     return x.toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
   }
-  // Pick decimals by magnitude so small and large numbers both read well.
   function auto(x) {
     if (!isFinite(x)) return "—";
     var a = Math.abs(x);
     return fmt(x, a >= 100 ? 0 : a >= 10 ? 1 : a >= 1 ? 2 : 3);
   }
+  function money(x) { return !isFinite(x) ? "—" : (x < 0 ? "−$" : "$") + fmt(Math.abs(x)); }
   function interp(t, x) {
     if (!isFinite(x)) return NaN;
     if (x <= t[0][0]) return t[0][1];
     for (var i = 1; i < t.length; i++) {
-      if (x <= t[i][0]) {
-        var a = t[i - 1], b = t[i];
-        return a[1] + (b[1] - a[1]) * (x - a[0]) / (b[0] - a[0]);
-      }
+      if (x <= t[i][0]) { var a = t[i - 1], b = t[i]; return a[1] + (b[1] - a[1]) * (x - a[0]) / (b[0] - a[0]); }
     }
     return t[t.length - 1][1];
   }
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function sum(a) { return a.reduce(function (t, r) { return t + (isFinite(r.v) ? r.v : 0); }, 0); }
 
-  // hero: {k, v, u}; rows: [{k, v, u, st, stt}]; note: {t, cls}
-  function render(id, hero, rows, note) {
+  // rows: {k, v, u, st, stt, tot} or {sep}
+  function render(id, hero, rows, note, extra) {
     var h = "";
     if (hero) h += '<div class="hero"><span class="k">' + esc(hero.k) + '</span><span class="v">' + esc(hero.v) + (hero.u ? '<span class="u">' + esc(hero.u) + "</span>" : "") + "</span></div>";
+    if (extra) h += extra;
     h += "<dl>";
     rows.forEach(function (r) {
-      h += "<dt>" + esc(r.k) + (r.st ? '<span class="chip ' + r.st + '">' + esc(r.stt) + "</span>" : "") + "</dt>";
-      h += "<dd>" + esc(r.v) + (r.u ? '<span class="u">' + esc(r.u) + "</span>" : "") + "</dd>";
+      if (r.sep) { h += '<dt class="sep">' + esc(r.sep) + "</dt>"; return; }
+      var t = r.tot ? ' class="tot"' : "";
+      h += "<dt" + t + ">" + esc(r.k) + (r.st ? '<span class="chip ' + r.st + '">' + esc(r.stt) + "</span>" : "") + "</dt>";
+      h += "<dd" + t + ">" + esc(r.v) + (r.u ? '<span class="u">' + esc(r.u) + "</span>" : "") + "</dd>";
     });
     h += "</dl>";
-    if (note) h += '<p class="note ' + (note.cls || "") + '">' + esc(note.t) + "</p>";
+    (note ? [].concat(note) : []).forEach(function (n) { if (n) h += '<p class="note ' + (n.cls || "") + '">' + esc(n.t) + "</p>"; });
     $(id).innerHTML = h;
   }
 
   /* ---------- reference data ---------- */
   // ASME consensus, industrial watertube drum boilers (upper values); firetube per typical ABMA guidance.
   var LIMITS = [
-    { id: "wt300",  name: "Watertube 0–300 psig",   si: 150, alk: 1000, cond: 5400, hard: "≤ 0.3" },
-    { id: "wt450",  name: "Watertube 301–450 psig", si: 90,  alk: 850,  cond: 4200, hard: "≤ 0.3" },
-    { id: "wt600",  name: "Watertube 451–600 psig", si: 40,  alk: 700,  cond: 3400, hard: "≤ 0.2" },
-    { id: "wt750",  name: "Watertube 601–750 psig", si: 30,  alk: 600,  cond: 2800, hard: "≤ 0.2" },
-    { id: "wt900",  name: "Watertube 751–900 psig", si: 20,  alk: 500,  cond: 2400, hard: "≤ 0.1" },
-    { id: "wt1000", name: "Watertube 901–1000 psig",si: 8,   alk: 200,  cond: 1500, hard: "≤ 0.05" },
-    { id: "ft",     name: "Firetube (low pressure)",si: 150, alk: 700,  cond: 7000, hard: "≤ 1.0" }
+    { id: "wt300",  name: "Watertube 0–300 psig",    si: 150, alk: 1000, cond: 5400 },
+    { id: "wt450",  name: "Watertube 301–450 psig",  si: 90,  alk: 850,  cond: 4200 },
+    { id: "wt600",  name: "Watertube 451–600 psig",  si: 40,  alk: 700,  cond: 3400 },
+    { id: "wt750",  name: "Watertube 601–750 psig",  si: 30,  alk: 600,  cond: 2800 },
+    { id: "wt900",  name: "Watertube 751–900 psig",  si: 20,  alk: 500,  cond: 2400 },
+    { id: "wt1000", name: "Watertube 901–1000 psig", si: 8,   alk: 200,  cond: 1500 },
+    { id: "ft",     name: "Firetube (low pressure)", si: 150, alk: 700,  cond: 7000 }
   ];
-  // Saturated steam: psig -> °F, psig -> hf (Btu/lb)
   var STEAM = [[0,212,180.2],[5,227,195.5],[15,250,218.3],[50,298,267.6],[100,338,309.0],[150,366,338.6],[200,388,362.0],[250,406,382.0],[300,422,399.4],[400,448,428.3],[600,489,475.1],[900,532,528.0]];
   var HF = STEAM.map(function (r) { return [r[0], r[2]]; });
   var HFG = { 0: 970.3, 5: 960.1, 15: 945.4 };
-  var DO = [[32,14.6],[50,11.3],[68,9.1],[86,7.6],[104,6.4],[122,5.5],[140,4.7],[158,3.8],[176,2.8],[194,1.6],[212,0]];
   var SALT_CAP = { 6: 20000, 8: 22500, 10: 25000, 12: 27000, 15: 30000 };
-  var SIZES = [1, 1.5, 2, 2.5, 3, 4, 5, 7, 10, 15, 20, 25, 30, 40, 50, 60, 75, 100, 150];
 
-  /* ---------- calculators ---------- */
-  function hardness() {
-    var f = { gpg: 17.12, ppm: 1, meq: 50.04, ca: 2.497, mg: 4.118 };
-    var ppm = num("h_val") * f[$("h_unit").value];
-    render("h_out1", { k: "Hardness as CaCO₃", v: auto(ppm), u: "ppm" }, [
-      { k: "Grains per gallon", v: auto(ppm / 17.12), u: "gpg" },
-      { k: "Milliequivalents", v: auto(ppm / 50.04), u: "meq/L" },
-      { k: "If all calcium", v: auto(ppm / 2.497), u: "mg/L Ca" },
-      { k: "If all magnesium", v: auto(ppm / 4.118), u: "mg/L Mg" }
-    ]);
-    var caH = num("h_ca") * 2.497, mgH = num("h_mg") * 4.118, th = caH + mgH;
-    render("h_out2", { k: "Total hardness", v: auto(th), u: "ppm CaCO₃" }, [
-      { k: "Calcium hardness", v: auto(caH), u: "ppm CaCO₃" },
-      { k: "Magnesium hardness", v: auto(mgH), u: "ppm CaCO₃" },
-      { k: "Total hardness", v: auto(th / 17.12), u: "gpg" }
-    ]);
+  /* ---------- shared site model ---------- */
+  function site() {
+    return {
+      S: num("x_steam"), hrs: num("x_hrs"), psig: num("x_psig"), C0: num("x_cyc"), cr: num("x_cr") / 100,
+      eff: num("x_eff") / 100, tmu: num("x_tmu"), tc: num("x_tc"),
+      hard: num("x_hard"), alk: num("x_alk"), si: num("x_si"), cond: num("x_cond"), so4: num("x_so4"), no3: num("x_no3"),
+      lsi: num("x_lsi"), lalk: num("x_lalk"), lcond: num("x_lcond"), margin: num("x_margin") / 100,
+      fuel: num("x_fuel"), water: num("x_water"), sewer: num("x_sewer"), kwh: num("x_kwh"),
+      salt: num("x_salt"), caustic: num("x_caustic"), chem: num("x_chem"), amine: num("x_amine")
+    };
+  }
+  // Cycles a limit allows, accounting for condensate diluting the makeup in the feedwater.
+  function maxCycles(s, mu, cr) {
+    cr = cr == null ? s.cr : cr;
+    var list = [["silica", s.lsi / mu.si], ["alkalinity", s.lalk / mu.alk], ["conductivity", s.lcond / mu.cond]]
+      .map(function (p) { return { by: p[0], c: (p[1] - cr) / (1 - cr) }; })
+      .filter(function (p) { return isFinite(p.c) && p.c > 1; });
+    return list.reduce(function (m, p) { return p.c < m.c ? p : m; }, { by: "—", c: Infinity });
+  }
+  // Annual flows and losses for one way of running the boiler.
+  function scenario(s, C, cr, alk) {
+    var bd = s.S / (C - 1), fw = s.S + bd, mu = fw - s.S * cr;
+    var hf = interp(HF, s.psig), hmu = s.tmu - 32;
+    var loss = bd * (hf - hmu) + s.S * (1 - cr) * (s.tc - s.tmu);
+    return { C: C, cr: cr, alk: alk, bd: bd, mu: mu, lost: s.S * (1 - cr),
+      muGal: mu / LB_GAL * s.hrs, bdGal: bd / LB_GAL * s.hrs,
+      mmbtu: loss * s.hrs / s.eff / 1e6 };
+  }
+  function costs(s, sc, base) {
+    return {
+      water: sc.muGal / 1000 * s.water,
+      sewer: sc.bdGal / 1000 * s.sewer,
+      fuel: sc.mmbtu * s.fuel,
+      chem: s.chem * sc.bd / base.bd,
+      amine: s.amine * (sc.mu * sc.alk) / (base.mu * base.alk)
+    };
+  }
+  function savingsRows(s, base, prop) {
+    var a = costs(s, base, base), b = costs(s, prop, base);
+    return [
+      { k: "Makeup water", v: a.water - b.water },
+      { k: "Sewer (blowdown)", v: a.sewer - b.sewer },
+      { k: "Fuel", v: a.fuel - b.fuel },
+      { k: "Internal treatment", v: a.chem - b.chem },
+      { k: "Condensate treatment", v: a.amine - b.amine }
+    ];
   }
 
-  function softener() {
-    var gpg = num("s_hard") / 17.12 + 5 * (num("s_fe") || 0);
-    var salt = +$("s_salt").value, cap = SALT_CAP[salt], ft3 = num("s_resin");
-    var grains = ft3 * cap;
-    var gal = grains * (1 - num("s_res") / 100) / gpg;
-    var days = gal / num("s_use");
-    var saltRegen = ft3 * salt;
-    var regensMonth = 30 / days;
-    var note = null;
-    if (days < 1) note = { t: "Regenerates more than once a day. Check for a twin alternating unit or more resin.", cls: "warn" };
-    render("s_out", { k: "Gallons between regenerations", v: auto(gal), u: "gal" }, [
-      { k: "Compensated hardness", v: auto(gpg), u: "gpg" },
-      { k: "Resin capacity", v: fmt(cap), u: "gr/ft³" },
-      { k: "Total capacity per tank", v: fmt(grains), u: "grains" },
-      { k: "Time between regenerations", v: days >= 1 ? auto(days) : auto(days * 24), u: days >= 1 ? "days" : "hours" },
-      { k: "Salt per regeneration", v: auto(saltRegen), u: "lb" },
-      { k: "Salt per month", v: auto(saltRegen * regensMonth), u: "lb" },
-      { k: "Salt efficiency", v: fmt(cap / salt), u: "gr/lb" },
-      { k: "Service rate at peak flow", v: fmt(num("z_peak") / ft3, 1), u: "gpm/ft³" }
-    ], note);
-
-    var need = num("s_use") * num("z_days") * gpg / (cap * (1 - num("s_res") / 100));
-    var size = SIZES.filter(function (x) { return x >= need; })[0];
-    var rate = num("z_peak") / size;
-    var rateSt = rate > 8 ? ["bad", "too high"] : rate > 5 ? ["warn", "peak only"] : ["ok", "ok"];
-    var minFt3 = num("z_peak") / 8;
-    render("z_out", { k: "Resin needed per tank", v: auto(need), u: "ft³" }, [
-      { k: "Next standard size", v: size ? fmt(size, size % 1 ? 1 : 0) : "> 150", u: "ft³" },
-      { k: "Service rate at peak, that size", v: fmt(rate, 1), u: "gpm/ft³", st: rateSt[0], stt: rateSt[1] },
-      { k: "Minimum resin for peak flow", v: auto(minFt3), u: "ft³" },
-      { k: "Salt per regeneration", v: size ? auto(size * salt) : "—", u: "lb" }
-    ], minFt3 > need ? { t: "Peak flow, not capacity, sets the resin volume here. Size for at least " + auto(minFt3) + " ft³.", cls: "warn" } : null);
-  }
-
-  function dealk() {
-    var alk = num("d_alk"), so4 = num("d_so4") * 1.042, no3 = num("d_no3") * 0.807;
-    var load = alk + so4 + no3, gpg = load / 17.12;
-    var ft3 = num("d_resin"), cap = num("d_cap");
-    var gal = ft3 * cap * (1 - num("d_res") / 100) / gpg;
-    var days = gal / num("d_use");
-    var caustic = $("d_regen").value === "caustic" ? 0.5 * ft3 : 0;
-    var effAlk = alk * num("d_leak") / 100;
-    var clAdded = (alk - effAlk + so4 + no3) * 0.709;
-    render("d_out", { k: "Gallons between regenerations", v: auto(gal), u: "gal" }, [
-      { k: "Anion load", v: auto(gpg), u: "gpg" },
-      { k: "Time between regenerations", v: days >= 1 ? auto(days) : auto(days * 24), u: days >= 1 ? "days" : "hours" },
-      { k: "Salt per regeneration", v: auto(5 * ft3), u: "lb" },
-      { k: "Caustic per regeneration", v: auto(caustic), u: "lb NaOH" },
-      { k: "Caustic as 50% liquid", v: auto(caustic / 0.5 / 12.76), u: "gal" },
-      { k: "Outlet alkalinity", v: auto(effAlk), u: "ppm CaCO₃" },
-      { k: "Chloride added", v: auto(clAdded), u: "ppm Cl" }
-    ], days < 1 ? { t: "Regenerates more than once a day. Check for a twin alternating unit or more resin.", cls: "warn" } : null);
-
-    var mu = 1 - num("d_cr") / 100, lim = num("d_lim");
-    var fw1 = alk * mu, fw2 = effAlk * mu;
-    var c1 = lim / fw1, c2 = lim / fw2;
-    render("d_out2", { k: "Cycles allowed by alkalinity", v: fmt(c1, 1) + " → " + fmt(c2, 1), u: "" }, [
-      { k: "Feedwater alkalinity, before", v: auto(fw1), u: "ppm CaCO₃" },
-      { k: "Feedwater alkalinity, after", v: auto(fw2), u: "ppm CaCO₃" },
-      { k: "CO₂ in steam, before", v: auto(0.79 * fw1), u: "ppm" },
-      { k: "CO₂ in steam, after", v: auto(0.79 * fw2), u: "ppm" },
-      { k: "Blowdown at alkalinity limit", v: fmt(100 / c1, 1) + " → " + fmt(100 / c2, 1), u: "% of FW" }
-    ], { t: "Less CO₂ in the steam means lower condensate corrosion and less neutralizing amine. Check that silica or conductivity does not become the new cycles limit.", cls: "" });
-  }
-
-  function fillDealk() {
-    var c = $("d_regen").value === "caustic";
-    $("d_cap").value = c ? 11000 : 8000;
-    $("d_leak").value = c ? 7 : 12;
-  }
-
-  function feed() {
-    var lbDay = num("cf_q") * 60 * num("cf_hrs") * LB_GAL * num("cf_ppm") / 1e6;
-    var galDay = lbDay / (num("cf_sg") * LB_GAL);
-    var mlMin = galDay * 3785.4 / (num("cf_hrs") * 60);
-    render("cf_out", { k: "Pump rate", v: fmt(mlMin, 1), u: "mL/min" }, [
-      { k: "Product per day", v: auto(galDay), u: "gal" },
-      { k: "Product per day", v: auto(lbDay), u: "lb" },
-      { k: "Pump rate", v: auto(galDay / num("cf_hrs")), u: "gal/hr" },
-      { k: "Product per month (30 d)", v: auto(galDay * 30), u: "gal" },
-      { k: "Container lasts", v: auto(num("cf_drum") / galDay), u: "days" }
-    ]);
-  }
-
-  function cycles() {
-    var mode = $("c_mode").value;
-    $("c_cap_u").textContent = mode === "bhp" ? "BHP" : "lb/hr";
-    var cm = $("c_cmode").value;
-    document.querySelectorAll("#cycles [data-show]").forEach(function (el) {
-      el.hidden = el.getAttribute("data-show").split(" ").indexOf(cm) < 0;
-    });
-    var isCl = cm === "cl";
-    $("c_b_u").textContent = $("c_f_u").textContent = isCl ? "ppm Cl" : "µS/cm";
-    $("c_b_s").textContent = isCl ? "Chloride concentrates without loss" : "Neutralized sample";
-
-    var rated = mode === "bhp" ? num("c_cap") * 34.5 : num("c_cap");
-    var steam = rated * num("c_load") / 100;
-    var C = cm === "direct" ? num("c_cyc") : num("c_b") / num("c_f");
-    var fw = steam * C / (C - 1), bd = steam / (C - 1);
-    var cond = steam * num("c_cr") / 100, mu = fw - cond;
-    var note = C <= 1 ? { t: "Cycles must be greater than 1.", cls: "bad" } : null;
-    render("c_out", { k: "Blowdown", v: auto(bd), u: "lb/hr" }, [
-      { k: "Cycles of concentration", v: fmt(C, 1), u: "" },
-      { k: "Steam rate", v: fmt(steam), u: "lb/hr" },
-      { k: "Feedwater", v: fmt(fw), u: "lb/hr" },
-      { k: "Feedwater", v: auto(fw / 500), u: "gpm" },
-      { k: "Blowdown", v: auto(bd / 500), u: "gpm" },
-      { k: "Blowdown, % of feedwater", v: fmt(100 / C, 1), u: "%" },
-      { k: "Makeup", v: auto(mu / 500), u: "gpm" },
-      { k: "Makeup per day", v: fmt(mu / LB_GAL * 24), u: "gal" },
-      { k: "Blowdown per day", v: fmt(bd / LB_GAL * 24), u: "gal" }
-    ], note);
-
-    var fwc = num("r_fw"), muc = num("r_mu"), cdc = num("r_cd");
-    var muPct = (fwc - cdc) / (muc - cdc) * 100;
-    render("r_out", { k: "Condensate return", v: fmt(100 - muPct, 1), u: "% of feedwater" }, [
-      { k: "Makeup in feedwater", v: fmt(muPct, 1), u: "%" }
-    ], muPct < 0 || muPct > 100 ? { t: "Feedwater should fall between the condensate and makeup readings.", cls: "warn" } : null);
-  }
-
-  function limits() {
-    var rows = [
-      { name: "Silica", c: num("l_lsi") / num("l_si") },
-      { name: "Alkalinity", c: num("l_lalk") / num("l_alk") },
-      { name: "Conductivity", c: num("l_lcond") / num("l_cond") }
-    ].filter(function (r) { return isFinite(r.c) && r.c > 0; });
-    var min = rows.reduce(function (m, r) { return r.c < m.c ? r : m; }, { c: Infinity, name: "—" });
-    var out = rows.map(function (r) {
-      return { k: r.name + " allows", v: fmt(r.c, 1), u: "cycles", st: r === min ? "warn" : "", stt: r === min ? "limiting" : "" };
-    });
-    out.push({ k: "Blowdown at max cycles", v: fmt(100 / min.c, 1), u: "% of FW" });
-    out.push({ k: "Target (10% margin)", v: fmt(min.c * 0.9, 1), u: "cycles" });
-    var cur = num("l_cur"), note = null;
-    if (isFinite(cur) && isFinite(min.c)) {
-      if (cur > min.c) note = { t: "Current cycles of " + fmt(cur, 1) + " exceed the " + min.name.toLowerCase() + " limit. Increase blowdown.", cls: "bad" };
-      else if (cur < min.c * 0.7) note = { t: "Running " + fmt(cur, 1) + " cycles. There is room to raise cycles and cut blowdown; see Blowdown savings.", cls: "" };
-      else note = { t: "Current cycles of " + fmt(cur, 1) + " are within the limit.", cls: "" };
+  var RESULTS = {};
+  // Assemble the payback readout: comparison rows, savings, operating cost, result.
+  function payback(key, name, capital, compare, sav, opex, notes) {
+    var S = sum(sav), O = sum(opex), net = S - O, yrs = capital / net;
+    RESULTS[key] = { name: name, capital: capital, sav: S, opex: O, net: net, yrs: yrs };
+    var hero, st;
+    if (!(net > 0)) { hero = { k: "Simple payback", v: "No payback", u: "net savings ≤ 0" }; st = ["bad", "none"]; }
+    else {
+      hero = { k: "Simple payback", v: yrs < 1 ? fmt(yrs * 12, 1) : fmt(yrs, 1), u: yrs < 1 ? "months" : "years" };
+      st = yrs <= 1 ? ["ok", "excellent"] : yrs <= 3 ? ["ok", "good"] : yrs <= 5 ? ["warn", "fair"] : ["bad", "long"];
     }
-    render("l_out", { k: "Maximum cycles", v: fmt(min.c, 1), u: "limited by " + min.name.toLowerCase() }, out, note);
+    var tot = Math.max(S, 1e-9);
+    var bar = '<div class="bar" aria-hidden="true"><span class="s" style="width:' + Math.max(0, Math.min(100, net / tot * 100)) + '%"></span><span class="c" style="width:' + Math.max(0, Math.min(100, O / tot * 100)) + '%"></span></div>' +
+      '<div class="barkey"><span>Net ' + money(net) + '/yr</span><span>Operating cost ' + money(O) + '/yr</span></div>';
+    var rows = compare.slice();
+    rows.push({ sep: "Annual savings" });
+    sav.forEach(function (r) { rows.push({ k: r.k, v: money(r.v) }); });
+    rows.push({ k: "Total savings", v: money(S), tot: true });
+    if (opex.length) {
+      rows.push({ sep: "Annual operating cost" });
+      opex.forEach(function (r) { rows.push({ k: r.k, v: money(r.v) }); });
+      rows.push({ k: "Total operating cost", v: money(O), tot: true });
+    }
+    rows.push({ sep: "Result" });
+    rows.push({ k: "Net annual savings", v: money(net), tot: true });
+    rows.push({ k: "Installed cost", v: money(capital) });
+    rows.push({ k: "Simple payback", v: net > 0 ? fmt(yrs, 2) : "—", u: "yr", st: st[0], stt: st[1] });
+    rows.push({ k: "5-year net", v: money(net * 5 - capital) });
+    rows.push({ k: "Return on investment", v: net > 0 ? fmt(net / capital * 100) : "—", u: "%/yr" });
+    render(key + "_out", hero, rows, notes, bar);
+  }
+  function cmp(k, a, b, u) { return { k: k, v: a + " → " + b, u: u }; }
+
+  /* ---------- site ---------- */
+  function siteCalc(s) {
+    var base = scenario(s, s.C0, s.cr, s.alk);
+    var c = costs(s, base, base);
+    var mx = maxCycles(s, s);
+    var target = mx.c * (1 - s.margin);
+    var notes = [];
+    if (s.C0 > mx.c) notes.push({ t: "Current cycles exceed the " + mx.by + " limit. Fix that before quoting savings.", cls: "bad" });
+    else if (s.C0 < target * 0.85) notes.push({ t: "Running well under the limit. A blowdown controller may pay back quickly.", cls: "" });
+    render("site_out", { k: "Blowdown & makeup cost today", v: money(c.water + c.sewer + c.fuel), u: "/yr" }, [
+      { k: "Blowdown", v: fmt(base.bd), u: "lb/hr" },
+      { k: "Blowdown", v: fmt(100 / s.C0, 1), u: "% of FW" },
+      { k: "Makeup", v: fmt(base.muGal), u: "gal/yr" },
+      { k: "Blowdown to sewer", v: fmt(base.bdGal), u: "gal/yr" },
+      { sep: "Annual cost" },
+      { k: "Makeup water", v: money(c.water) },
+      { k: "Sewer (blowdown)", v: money(c.sewer) },
+      { k: "Fuel lost to blowdown & lost condensate", v: money(c.fuel) },
+      { sep: "Limits with today's water" },
+      { k: "Maximum cycles", v: fmt(mx.c, 1), u: "by " + mx.by },
+      { k: "Target with margin", v: fmt(target, 1), u: "cycles" }
+    ], notes);
+    return base;
   }
 
-  function fillLimits() {
-    var lim = LIMITS.filter(function (l) { return l.id === $("l_type").value; })[0];
-    $("l_lsi").value = lim.si; $("l_lalk").value = lim.alk; $("l_lcond").value = lim.cond;
+  /* ---------- projects ---------- */
+  function softener(s, base) {
+    var days = s.hrs / 24;
+    var gal = base.muGal + num("k_other") * days;
+    var grains = gal * s.hard / 17.12;
+    var ft3 = num("k_resin"), s0 = +$("k_salt0").value, s1 = +$("k_salt1").value;
+    var reg0 = num("k_reg") * 52;
+    var reg1 = grains / (ft3 * SALT_CAP[s1] * (1 - num("k_res") / 100));
+    var need0 = grains / (ft3 * SALT_CAP[s0]);
+    var salt0 = reg0 * ft3 * s0, salt1 = reg1 * ft3 * s1;
+    var w0 = reg0 * ft3 * num("k_w0"), w1 = reg1 * ft3 * num("k_w1");
+    var notes = [];
+    if (reg0 < need0) notes.push({ t: "Today's schedule regenerates less often than the hardness load needs (" + fmt(need0) + "/yr). Expect hardness leakage now; check the inputs.", cls: "warn" });
+    payback("softener", "Softener upgrade", num("k_cap"), [
+      cmp("Regenerations", fmt(reg0), fmt(reg1), "/yr"),
+      cmp("Salt", fmt(salt0 / 2000, 1), fmt(salt1 / 2000, 1), "tons/yr"),
+      cmp("Regeneration water", fmt(w0 / 1000), fmt(w1 / 1000), "kgal/yr"),
+      { k: "Softened water", v: fmt(gal / 1000), u: "kgal/yr" }
+    ], [
+      { k: "Salt", v: (salt0 - salt1) / 2000 * s.salt },
+      { k: "Regeneration water + sewer", v: (w0 - w1) / 1000 * (s.water + s.sewer) }
+    ], num("k_opex") ? [{ k: "Added maintenance", v: num("k_opex") }] : [], notes);
   }
 
-  function scavenger() {
-    var src = $("o_src").value;
-    document.querySelectorAll("#scavenger [data-oshow]").forEach(function (el) { el.hidden = el.getAttribute("data-oshow") !== src; });
-    var o2 = src === "da" ? 0.007 : src === "tank" ? interp(DO, num("o_temp")) : num("o_do");
-    var forO2 = 7.88 * o2;
-    var forRes = 1.574 * num("o_res") / num("o_cyc");
-    var na2so3 = forO2 + forRes;
-    var prodPpm = na2so3 / (num("o_act") / 100);
-    var lbDay = prodPpm * num("o_fw") * 24 / 1e6;
-    var galDay = lbDay / (num("o_sg") * LB_GAL);
-    render("o_out", { k: "Product feed", v: auto(galDay), u: "gal/day" }, [
-      { k: "Feedwater oxygen", v: fmt(o2, 3), u: "ppm O₂" },
-      { k: "Na₂SO₃ for oxygen", v: auto(forO2), u: "ppm in FW" },
-      { k: "Na₂SO₃ for residual", v: auto(forRes), u: "ppm in FW" },
-      { k: "Total Na₂SO₃", v: auto(na2so3), u: "ppm in FW" },
-      { k: "Product dose", v: auto(prodPpm), u: "ppm in FW" },
-      { k: "Product per day", v: auto(lbDay), u: "lb" },
-      { k: "Pump rate", v: fmt(galDay * 3785.4 / 1440, 1), u: "mL/min" }
-    ], src === "tank" && o2 > 1 ? { t: "Most of this sulfite goes to oxygen. Raising the feed tank temperature or adding a deaerator cuts it sharply.", cls: "" } : null);
+  function dealk(s, base) {
+    var caustic = $("d_regen").value === "caustic";
+    var alk2 = s.alk * num("d_leak") / 100;
+    var mx = maxCycles(s, { si: s.si, alk: alk2, cond: s.cond });
+    var C1 = mx.c * (1 - s.margin);
+    var prop = scenario(s, C1, s.cr, alk2);
+    var load = s.alk + s.so4 * 1.042 + s.no3 * 0.807;
+    var ft3yr = prop.muGal * load / 17.12 / num("d_capy");
+    var saltLb = ft3yr * 5, naoh = caustic ? ft3yr * 0.5 : 0;
+    var regenGal = ft3yr * num("d_w");
+    var notes = [];
+    if (C1 <= s.C0) notes.push({ t: "Removing alkalinity does not raise cycles here; " + mx.by + " already limits the boiler.", cls: "warn" });
+    var mx0 = maxCycles(s, s);
+    payback("dealk", "Dealkalizer", num("d_cap"), [
+      cmp("Makeup alkalinity", fmt(s.alk), fmt(alk2), "ppm"),
+      cmp("Limited by", mx0.by, mx.by, ""),
+      cmp("Cycles", fmt(s.C0, 1), fmt(C1, 1), ""),
+      cmp("Blowdown", fmt(base.bd), fmt(prop.bd), "lb/hr"),
+      cmp("Makeup", fmt(base.muGal / 1000), fmt(prop.muGal / 1000), "kgal/yr")
+    ], C1 > s.C0 ? savingsRows(s, base, prop) : [{ k: "Condensate treatment", v: savingsRows(s, base, scenario(s, s.C0, s.cr, alk2))[4].v }], [
+      { k: "Salt", v: saltLb / 2000 * s.salt },
+      { k: "Caustic (50%)", v: naoh / 6.38 * s.caustic },
+      { k: "Regeneration water + sewer", v: regenGal / 1000 * (s.water + s.sewer) },
+      { k: "Resin replacement", v: num("d_resin") * num("d_resp") / num("d_life") },
+      { k: "Added maintenance", v: num("d_opex") }
+    ], notes);
   }
 
-  function savings() {
-    var S = num("v_steam"), c1 = num("v_c1"), c2 = num("v_c2"), hrs = num("v_hrs");
-    var bd1 = S / (c1 - 1), bd2 = S / (c2 - 1), dbd = bd1 - bd2;
-    var hf = interp(HF, num("v_psig"));
-    var perLb = hf - (num("v_mut") - 32);
-    var mmbtu = dbd * perLb * hrs / (num("v_eff") / 100) / 1e6;
-    var fuel$ = mmbtu * num("v_fuel");
-    var gal = dbd / LB_GAL * hrs;
-    var water$ = gal / 1000 * num("v_wat");
-    var ft = $("v_ft").value, hff = interp(HF, +ft), hfg = HFG[ft];
-    var flashPct = (hf - hff) / hfg;
-    var note = null;
-    if (c1 <= 1 || c2 <= 1) note = { t: "Cycles must be greater than 1.", cls: "bad" };
-    else if (c2 <= c1) note = { t: "Proposed cycles are not higher than current, so there is no saving.", cls: "warn" };
-    render("v_out", { k: "Annual savings", v: "$" + fmt(fuel$ + water$), u: "/yr" }, [
-      { k: "Blowdown now", v: fmt(bd1), u: "lb/hr" },
-      { k: "Blowdown proposed", v: fmt(bd2), u: "lb/hr" },
-      { k: "Heat lost per lb blowdown", v: fmt(perLb), u: "Btu/lb" },
-      { k: "Fuel saved", v: fmt(mmbtu), u: "MMBtu/yr" },
-      { k: "Fuel saved", v: "$" + fmt(fuel$), u: "/yr" },
-      { k: "Water saved", v: fmt(gal), u: "gal/yr" },
-      { k: "Water + sewer saved", v: "$" + fmt(water$), u: "/yr" },
-      { k: "Flash steam from blowdown", v: fmt(flashPct * 100, 1), u: "%" },
-      { k: "Flash steam at current BD", v: fmt(bd1 * flashPct), u: "lb/hr" }
-    ], note);
+  function ro(s, base) {
+    var rej = num("r_rej") / 100, ar = num("r_alkrej") / 100, rec = num("r_rec") / 100;
+    var w = { si: s.si * (1 - rej), alk: s.alk * (1 - ar), cond: s.cond * (1 - rej) };
+    var mx = maxCycles(s, w);
+    var C1 = Math.min(mx.c * (1 - s.margin), num("r_maxc"));
+    var by = C1 === num("r_maxc") ? "practical maximum" : mx.by;
+    var prop = scenario(s, C1, s.cr, w.alk);
+    var feed = prop.muGal / rec, reject = feed - prop.muGal;
+    var gpm = feed / (s.hrs * 60);
+    var kw = gpm * num("r_psi") / (1714 * num("r_eff") / 100) * 0.746;
+    var asLb = feed * LB_GAL * num("r_as") / 1e6;
+    payback("ro", "Reverse osmosis", num("r_cap"), [
+      cmp("Makeup conductivity", fmt(s.cond), fmt(w.cond, 1), "µS/cm"),
+      cmp("Cycles", fmt(s.C0, 1), fmt(C1, 1), ""),
+      { k: "Now limited by", v: by },
+      cmp("Blowdown", fmt(base.bd), fmt(prop.bd), "lb/hr"),
+      { k: "RO feed / reject", v: fmt(feed / 1000) + " / " + fmt(reject / 1000), u: "kgal/yr" },
+      { k: "Average feed flow", v: fmt(gpm, 1), u: "gpm" }
+    ], savingsRows(s, base, prop), [
+      { k: "Reject water + sewer", v: reject / 1000 * (s.water + s.sewer) },
+      { k: "Power (" + fmt(kw, 1) + " kW)", v: kw * s.hrs * s.kwh },
+      { k: "Antiscalant", v: asLb * num("r_asp") },
+      { k: "Membrane replacement", v: num("r_n") * num("r_elp") / num("r_life") },
+      { k: "Cleanings", v: num("r_cln") * num("r_clnp") },
+      { k: "Other maintenance", v: num("r_opex") }
+    ], C1 <= s.C0 ? [{ t: "RO does not raise cycles above today's value with these inputs.", cls: "warn" }] : null);
   }
 
-  /* ---------- reference tables ---------- */
-  function buildRef() {
-    var sel = $("l_type");
+  function controller(s, base) {
+    var mx = maxCycles(s, s), auto1 = mx.c * (1 - s.margin);
+    $("b_target").placeholder = fmt(auto1, 1) + " (auto)";
+    var C1 = isFinite(num("b_target")) ? num("b_target") : auto1;
+    var prop = scenario(s, C1, s.cr, s.alk);
+    var notes = [];
+    if (C1 > mx.c) notes.push({ t: "Target is above the " + mx.by + " limit of " + fmt(mx.c, 1) + " cycles.", cls: "bad" });
+    if (C1 <= s.C0) notes.push({ t: "Already at or above the achievable cycles; a controller mainly adds consistency here.", cls: "warn" });
+    payback("controller", "Blowdown controller", num("b_cap"), [
+      cmp("Cycles", fmt(s.C0, 1), fmt(C1, 1), ""),
+      { k: "Limited by", v: mx.by },
+      cmp("Blowdown", fmt(base.bd), fmt(prop.bd), "lb/hr"),
+      cmp("Makeup", fmt(base.muGal / 1000), fmt(prop.muGal / 1000), "kgal/yr")
+    ], savingsRows(s, base, prop), [{ k: "Added maintenance", v: num("b_opex") }], notes);
+  }
+
+  function heatrec(s, base) {
+    var mode = $("h_mode").value, flash = mode !== "hx", hx = mode !== "flash";
+    var ft = $("h_ft").value, hff = interp(HF, +ft), hfg = HFG[ft], hfb = interp(HF, s.psig);
+    var tout = num("h_out");
+    var flashLb = flash ? base.bd * Math.max(0, hfb - hff) / hfg : 0;
+    var qFlash = flashLb * hfg;
+    var liq = base.bd - flashLb, hin = flash ? hff : hfb;
+    var qHx = hx ? liq * Math.max(0, hin - (tout - 32)) : 0;
+    // The exchanger can only put as much heat into the makeup as the makeup can take.
+    var muFlow = base.mu - flashLb;
+    var qHxMax = muFlow * Math.max(0, (hin + 32 - 10) - s.tmu);
+    var capped = hx && qHx > qHxMax;
+    if (capped) qHx = qHxMax;
+    var fuelPer = s.hrs / s.eff / 1e6 * s.fuel;
+    var notes = [];
+    if (hx && tout < s.tmu + 5) notes.push({ t: "Drain outlet must be warmer than the makeup it heats. Use at least " + fmt(s.tmu + 10) + " °F.", cls: "warn" });
+    if (capped) notes.push({ t: "Exchanger savings are capped by how much heat the makeup can absorb.", cls: "warn" });
+    payback("heatrec", "Blowdown heat recovery", num("h_cap"), [
+      { k: "Blowdown today", v: fmt(base.bd), u: "lb/hr" },
+      { k: "Flash steam to deaerator", v: fmt(flashLb), u: "lb/hr" },
+      { k: "Flash fraction", v: fmt(flashLb / base.bd * 100, 1), u: "%" },
+      { k: "Heat recovered", v: fmt((qFlash + qHx) / 1e6, 2), u: "MMBtu/hr" }
+    ], [
+      { k: "Fuel, flash steam", v: qFlash * fuelPer },
+      { k: "Fuel, heat exchanger", v: qHx * fuelPer },
+      { k: "Water + sewer (flash steam kept)", v: flashLb / LB_GAL * s.hrs / 1000 * (s.water + s.sewer) }
+    ], [{ k: "Added maintenance", v: num("h_opex") }], notes);
+  }
+
+  function condensate(s, base) {
+    var cr1 = num("q_cr") / 100;
+    var k = s.C0 * (1 - s.cr) + s.cr;
+    var C1 = (k - cr1) / (1 - cr1);
+    var prop = scenario(s, C1, cr1, s.alk);
+    var sav = savingsRows(s, base, prop);
+    sav[2].k = "Fuel (condensate heat + blowdown)";
+    if ($("q_drain").value === "sewer") sav.splice(2, 0, { k: "Sewer (lost condensate)", v: (base.lost - prop.lost) / LB_GAL * s.hrs / 1000 * s.sewer });
+    var notes = [];
+    if (cr1 <= s.cr) notes.push({ t: "Proposed return is not higher than today's " + fmt(s.cr * 100) + "%.", cls: "warn" });
+    if (cr1 >= 1) notes.push({ t: "Return must be under 100%.", cls: "bad" });
+    payback("condensate", "Condensate return", num("q_cap"), [
+      cmp("Condensate return", fmt(s.cr * 100), fmt(cr1 * 100), "%"),
+      cmp("Cycles", fmt(s.C0, 1), fmt(C1, 1), ""),
+      cmp("Makeup", fmt(base.muGal / 1000), fmt(prop.muGal / 1000), "kgal/yr"),
+      cmp("Blowdown", fmt(base.bd), fmt(prop.bd), "lb/hr")
+    ], sav, [{ k: "Added maintenance & power", v: num("q_opex") }], notes);
+  }
+
+  function summary() {
+    var order = ["softener", "dealk", "ro", "controller", "heatrec", "condensate"];
+    $("summary").tBodies[0].innerHTML = order.map(function (k) {
+      var r = RESULTS[k];
+      var pb = r.net > 0 ? (r.yrs < 1 ? fmt(r.yrs * 12, 1) + " mo" : fmt(r.yrs, 1) + " yr") : "none";
+      return '<tr><td><a href="#' + k + '">' + esc(r.name) + '</a></td><td class="n">' + money(r.capital) + '</td><td class="n">' + money(r.sav) + '</td><td class="n">' + money(r.opex) + '</td><td class="n">' + money(r.net) + '</td><td class="n">' + pb + '</td><td class="n">' + money(r.net * 5 - r.capital) + "</td></tr>";
+    }).join("");
+    document.querySelectorAll("[data-pb]").forEach(function (el) {
+      var r = RESULTS[el.getAttribute("data-pb")];
+      el.textContent = r && r.net > 0 ? (r.yrs < 1 ? fmt(r.yrs * 12, 0) + " mo" : fmt(r.yrs, 1) + " yr") : "—";
+    });
+  }
+
+  function runAll() {
+    var s = site();
+    var base = siteCalc(s);
+    var line = 'Site: ' + fmt(s.S) + ' lb/hr steam · ' + fmt(s.C0, 1) + ' cycles · ' + fmt(s.cr * 100) + '% condensate return · fuel $' + fmt(s.fuel, 2) + '/MMBtu · water + sewer $' + fmt(s.water + s.sewer, 2) + '/kgal. <a href="#site">Change site &amp; costs</a>';
+    document.querySelectorAll("[data-basis]").forEach(function (el) { el.innerHTML = line; });
+    softener(s, base); dealk(s, base); ro(s, base); controller(s, base); heatrec(s, base); condensate(s, base);
+    summary();
+  }
+
+  /* ---------- setup ---------- */
+  function buildStatic() {
+    var sel = $("x_type");
     LIMITS.forEach(function (l) { var o = document.createElement("option"); o.value = l.id; o.textContent = l.name; sel.appendChild(o); });
+    document.querySelectorAll(".saltsel").forEach(function (s) {
+      Object.keys(SALT_CAP).forEach(function (k) {
+        var o = document.createElement("option"); o.value = k; o.textContent = k + " lb/ft³ — " + fmt(SALT_CAP[k]) + " gr/ft³";
+        if (k === s.getAttribute("data-def")) o.selected = true;
+        s.appendChild(o);
+      });
+    });
     $("ref_limits").tBodies[0].innerHTML = LIMITS.map(function (l) {
-      return "<tr><td>" + esc(l.name) + '</td><td class="n">' + l.si + '</td><td class="n">' + fmt(l.alk) + '</td><td class="n">' + fmt(l.cond) + '</td><td class="n">' + esc(l.hard) + "</td></tr>";
+      return "<tr><td>" + esc(l.name) + '</td><td class="n">' + l.si + '</td><td class="n">' + fmt(l.alk) + '</td><td class="n">' + fmt(l.cond) + "</td></tr>";
+    }).join("");
+    $("ref_salt").tBodies[0].innerHTML = Object.keys(SALT_CAP).map(function (k) {
+      return '<tr><td class="n">' + k + '</td><td class="n">' + fmt(SALT_CAP[k]) + '</td><td class="n">' + fmt(SALT_CAP[k] / k) + "</td></tr>";
     }).join("");
     $("ref_steam").tBodies[0].innerHTML = STEAM.map(function (r) {
       return '<tr><td class="n">' + r[0] + '</td><td class="n">' + r[1] + '</td><td class="n">' + fmt(r[2], 1) + "</td></tr>";
     }).join("");
-    $("ref_do").tBodies[0].innerHTML = DO.map(function (r) {
-      return '<tr><td class="n">' + r[0] + '</td><td class="n">' + fmt(r[1], 1) + "</td></tr>";
-    }).join("");
+  }
+  function fillLimits() {
+    var lim = LIMITS.filter(function (l) { return l.id === $("x_type").value; })[0];
+    $("x_lsi").value = lim.si; $("x_lalk").value = lim.alk; $("x_lcond").value = lim.cond;
+  }
+  function fillDealk() {
+    var c = $("d_regen").value === "caustic";
+    $("d_capy").value = c ? 11000 : 8000;
+    $("d_leak").value = c ? 7 : 12;
   }
 
-  /* ---------- wiring ---------- */
-  var CALCS = { hardness: hardness, softener: softener, dealk: dealk, feed: feed, cycles: cycles, limits: limits, scavenger: scavenger, savings: savings };
-  var KEY = "bpfc-inputs-v2";
+  var KEY = "wtpc-inputs-v1";
   var fields = function () { return Array.prototype.slice.call(document.querySelectorAll("main input, main select")); };
 
-  buildRef();
-  var defaults = {};
+  buildStatic();
   fillLimits();
   fillDealk();
+  var defaults = {};
   fields().forEach(function (el) { defaults[el.id] = el.value; });
-
   try {
     var saved = JSON.parse(localStorage.getItem(KEY) || "{}");
     fields().forEach(function (el) { if (saved[el.id] != null) el.value = saved[el.id]; });
   } catch (e) { /* storage unavailable */ }
-
   function save() {
     try { var o = {}; fields().forEach(function (el) { o[el.id] = el.value; }); localStorage.setItem(KEY, JSON.stringify(o)); } catch (e) { /* ignore */ }
   }
-  function runAll() { Object.keys(CALCS).forEach(function (k) { CALCS[k](); }); }
 
   document.querySelector("main").addEventListener("input", function (e) {
-    if (e.target.id === "l_type") fillLimits();
+    if (e.target.id === "x_type") fillLimits();
     if (e.target.id === "d_regen") fillDealk();
-    var sec = e.target.closest("section.calc");
-    if (sec && CALCS[sec.id]) CALCS[sec.id]();
+    runAll();
     save();
   });
   $("reset").addEventListener("click", function () {
@@ -752,17 +836,19 @@ footer.disc { grid-column: 1 / -1; font-size: 12px; color: var(--muted); border-
   });
 
   function show(id) {
-    if (!document.getElementById(id) || !document.getElementById(id).classList.contains("calc")) id = "hardness";
+    var el = document.getElementById(id);
+    if (!el || !el.classList.contains("calc")) id = "site";
     document.querySelectorAll("section.calc").forEach(function (s) { s.classList.toggle("on", s.id === id); });
     document.querySelectorAll("nav.index a").forEach(function (a) { a.setAttribute("aria-current", a.getAttribute("href") === "#" + id ? "true" : "false"); });
   }
-  document.querySelectorAll("nav.index a").forEach(function (a) {
-    a.addEventListener("click", function (e) {
-      e.preventDefault();
-      var id = a.getAttribute("href").slice(1);
-      show(id);
-      try { history.replaceState(null, "", "#" + id); } catch (err) { /* ignore */ }
-    });
+  document.addEventListener("click", function (e) {
+    var a = e.target.closest('a[href^="#"]');
+    if (!a) return;
+    e.preventDefault();
+    var id = a.getAttribute("href").slice(1);
+    show(id);
+    try { history.replaceState(null, "", "#" + id); } catch (err) { /* ignore */ }
+    window.scrollTo(0, 0);
   });
   window.addEventListener("hashchange", function () { show(location.hash.slice(1)); });
 
